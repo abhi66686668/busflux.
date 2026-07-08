@@ -2,8 +2,10 @@ const express = require("express");
 const router  = express.Router();
 const nodemailer = require("nodemailer");
 const Booking = require("../models/Booking");
+const OwnerTransaction = require("../models/OwnerTransaction");
 const Bus     = require("../models/Bus");
 const User    = require("../models/User");
+const Setting = require("../models/Setting");
 const auth    = require("../middleware/auth");
 
 
@@ -61,14 +63,18 @@ router.post("/book/:busId", auth, async (req, res) => {
     const pricePerSeat = Math.round(basePrice * ratio);
     const totalPrice   = pricePerSeat * seatsBooked;
 
-    // Check wallet balance
-    if ((user.balance || 0) < totalPrice) {
-      return res.status(400).json({ message: `Insufficient wallet balance (Current: ₹${user.balance || 0}). Please recharge.` });
+    // Check balance (prioritize pass balance)
+    let passUsed = false;
+    if (user.monthlyPassExpiry && user.monthlyPassExpiry > new Date() && (user.monthlyPassBalance || 0) >= totalPrice) {
+      passUsed = true;
+    } else if ((user.balance || 0) >= totalPrice) {
+      passUsed = false;
+    } else {
+      return res.status(400).json({ message: `Insufficient balance in both Wallet and Pass. Please recharge.` });
     }
 
     const Notification = require("../models/Notification");
     
-    // Create booking
     const booking = await Booking.create({
       userId:        req.user.id,
       busId:         bus._id,
@@ -78,6 +84,20 @@ router.post("/book/:busId", auth, async (req, res) => {
       droppingPoint: droppingPoint || bus.to,
       paymentMethod: "wallet",
       paymentStatus: "paid"
+    });
+
+    const setting = await Setting.findOne({ key: "commissionPercentage" });
+    const commPct = setting && !isNaN(setting.value) ? parseFloat(setting.value) : 10;
+    const commissionAmount = Math.round(totalPrice * (commPct / 100));
+    const ownerAmount = totalPrice - commissionAmount;
+
+    await OwnerTransaction.create({
+      bookingId: booking._id,
+      busId: bus._id,
+      ticketAmount: totalPrice,
+      commissionAmount,
+      ownerAmount,
+      status: "Pending Settlement"
     });
 
     // Notify admin
@@ -109,12 +129,17 @@ router.post("/book/:busId", auth, async (req, res) => {
     } catch(err) { console.error(err); }
 
     // Deduct from wallet
-    user.balance -= totalPrice;
+    if (passUsed) {
+      user.monthlyPassBalance -= totalPrice;
+    } else {
+      user.balance -= totalPrice;
+    }
     await user.save();
 
     // Reduce seats
     bus.availableSeats -= seatsBooked;
     await bus.save();
+
 
     // Generate QR code
     const ticketId = booking._id.toString().substring(booking._id.toString().length - 8).toUpperCase();

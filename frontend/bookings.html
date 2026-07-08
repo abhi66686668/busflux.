@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -19,7 +19,7 @@
 <body>
 
   <div class="app-layout">
-    <!-- ── Sidebar ── -->
+    <!-- -- Sidebar -- -->
     <aside class="sidebar" id="sidebar">
       <a href="index.html" class="sidebar-logo">
         <div class="logo-icon"><i class="fas fa-bus-alt"></i></div>
@@ -32,9 +32,7 @@
         <a href="buses.html" class="nav-item" id="sideNavBuses">
           <i class="fas fa-bus"></i> Buses
         </a>
-        <a href="bookings.html" class="nav-item active" id="sideNavBookings">
-          <i class="fas fa-ticket"></i> My Bookings
-        </a>
+        
         <a href="wallet.html" class="nav-item" id="sideNavWallet">
           <i class="fas fa-wallet"></i> Wallet
         </a>
@@ -45,10 +43,8 @@
         <a href="#" class="nav-item" onclick="showOffersToast(); return false;">
           <i class="fas fa-tag"></i> Offers
         </a>
-        <a href="#" class="nav-item" onclick="scrollToStats(); return false;">
-          <i class="fas fa-location-dot"></i> Track Bus
-        </a>
-        <a href="#" class="nav-item" onclick="showHelpToast(); return false;">
+        <a href="buses.html" class="nav-item"><i class="fas fa-location-dot"></i> Track Bus</a>
+        <a href="help.html" class="nav-item">
           <i class="fas fa-circle-question"></i> Help Center
         </a>
       </nav>
@@ -64,7 +60,7 @@
           <i class="fas fa-user"></i>
         </div>
         <div class="sidebar-user-info">
-          <strong id="sidebarUserName">Hi, Traveler 👋</strong>
+          <strong id="sidebarUserName">Hi, Traveler ??</strong>
           <a href="login.html" id="sidebarUserAction">Login / Sign up</a>
         </div>
       </div>
@@ -72,7 +68,7 @@
     <!-- Sidebar overlay for mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-    <!-- ── Main Content ── -->
+    <!-- -- Main Content -- -->
     <div class="main-content">
       <!-- Top Bar -->
       <header class="top-bar">
@@ -103,5 +99,9 @@
 
   <script src="script.js?v=10"></script>
   <script src="ui-layout.js?v=4"></script>
+
 </body>
 </html>
+
+
+

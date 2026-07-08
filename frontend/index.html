@@ -990,9 +990,173 @@
     @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(20px); } }
 
-    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    /* ════════════════════════════════════════════════════════════
+       REVIEWS SECTION
+    ════════════════════════════════════════════════════════════ */
+    .reviews-section {
+      padding: 0 40px 40px;
+      margin-top: 20px;
+    }
+    .reviews-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .review-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+      border: 1px solid var(--border);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .review-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+    }
+    .review-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 16px;
+    }
+    .review-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+    .review-name {
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    .review-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .review-rating {
+      color: #f59e0b;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+    .review-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .reviews-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .reviews-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 0;
+    }
+    .write-review-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .write-review-btn:hover {
+      background: var(--primary-dark);
+    }
+    
+    /* Star Rating Widget */
+    .star-rating-widget {
+      display: flex;
+      gap: 5px;
+      font-size: 2rem;
+      color: #cbd5e1;
+      cursor: pointer;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .star-rating-widget i.active, .star-rating-widget i:hover, .star-rating-widget i:hover ~ i {
+      color: #f59e0b;
+    }
+    .star-rating-widget i {
+      transition: color 0.2s;
+    }
+
+    /* Generic Modal CSS */
+    .modal {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15,23,42,0.8);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+      padding: 30px;
+      position: relative;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .modal.open .modal-content {
+      transform: translateY(0);
+    }
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #f1f5f9;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #64748b;
+      font-size: 1.2rem;
+      transition: 0.2s;
+    }
+    .close-btn:hover {
+      background: #e2e8f0;
+      color: #ef4444;
+    }
+
+    /* ════════════════════════════════════════════════════════════
        SIDEBAR MOBILE TOGGLE
-    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+    ════════════════════════════════════════════════════════════ */
     .mobile-menu-btn {
       display: none;
       width: 38px;
@@ -1030,6 +1194,7 @@
       .sidebar-overlay.open { display: block; }
       .main-content { margin-left: 0; }
       .mobile-menu-btn { display: flex; }
+
       .hero-text h1 { font-size: 2rem; }
       .hero-img-wrap { width: 45%; }
       .stats-section { flex-wrap: wrap; }
@@ -1057,6 +1222,38 @@
       .hero-img-wrap { display: none; }
       .hero-text h1 { font-size: 1.8rem; }
     }
+    /* Offers Ticker Animation in Top Bar */
+    .offers-ticker {
+      flex: 1;
+      max-width: 600px;
+      background: linear-gradient(90deg, var(--primary), #a855f7);
+      color: white;
+      padding: 10px 0;
+      border-radius: 50px;
+      overflow: hidden;
+      position: relative;
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(108,63,214,0.2);
+      margin: 0 16px;
+    }
+    .ticker-content {
+      display: flex;
+      white-space: nowrap;
+      animation: tickerAnim 25s linear infinite;
+    }
+    .offers-ticker:hover .ticker-content {
+      animation-play-state: paused;
+    }
+    .ticker-item {
+      padding: 0 40px;
+    }
+    @keyframes tickerAnim {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
   </style>
 </head>
 <body>
@@ -1077,9 +1274,7 @@
       <a href="buses.html" class="nav-item" id="sideNavBuses">
         <i class="fas fa-bus"></i> Buses
       </a>
-      <a href="bookings.html" class="nav-item" id="sideNavBookings">
-        <i class="fas fa-ticket"></i> My Bookings
-      </a>
+      
       <a href="wallet.html" class="nav-item" id="sideNavWallet">
         <i class="fas fa-wallet"></i> Wallet
       </a>
@@ -1092,12 +1287,10 @@
       <a href="#" class="nav-item" onclick="showOffersToast(); return false;">
         <i class="fas fa-tag"></i> Offers
       </a>
-      <a href="#" class="nav-item" onclick="scrollToStats(); return false;">
-        <i class="fas fa-location-dot"></i> Track Bus
-      </a>
-      <a href="#" class="nav-item" onclick="showHelpToast(); return false;">
-        <i class="fas fa-circle-question"></i> Help Center
-      </a>
+      <a href="buses.html" class="nav-item"><i class="fas fa-location-dot"></i> Track Bus</a>
+        <a href="help.html" class="nav-item">
+          <i class="fas fa-circle-question"></i> Help Center
+        </a>
     </nav>
 
     <!-- Promo sidebar -->
@@ -1131,12 +1324,30 @@
         <i class="fas fa-bars"></i>
       </button>
 
-      <div class="search-bar">
-        <i class="fas fa-search"></i>
-        <input type="text" placeholder="Search for routes, cities or buses..." id="globalSearch"
-            oninput="handleGlobalSearch(this.value)"
-            onkeydown="if(event.key==='Enter' && this.value.trim().length>0){ clearTimeout(window._searchRedirectTimer); window.location.href='buses.html?search='+encodeURIComponent(this.value.trim()); }"
-            autocomplete="off">
+      <!-- Offers Ticker in Top Bar -->
+      <div class="offers-ticker" onclick="showOffersToast()">
+        <div class="ticker-content">
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+          <div class="ticker-item"><i class="fas fa-gift" style="margin-right: 8px;"></i> First recharge will get ₹100 cash back! Click here for details.</div>
+        </div>
       </div>
 
               <div class="top-bar-actions">
@@ -1166,15 +1377,17 @@
     <!-- Page Scroll Area -->
     <div class="page-scroll">
 
+
+      <div id="homeAlertContainer" style="max-width: 1200px; margin: 20px auto 0; padding: 0 32px;"></div>
+
       <!-- Hero -->
       <section class="hero-section">
         <div class="hero-text">
           <h1>Travel Smart.<br><span>Travel Easy.</span></h1>
           <p>Book bus tickets effortlessly with our modern platform and enjoy a hassle-free journey.</p>
           <div class="hero-badges">
-            <span class="hero-badge"><i class="fas fa-bolt"></i> Quick Booking</span>
             <span class="hero-badge green"><i class="fas fa-shield-alt"></i> Secure Payments</span>
-            <span class="hero-badge blue"><i class="fas fa-headset"></i> 24/7 Support</span>
+            <span class="hero-badge blue" onclick="window.location.href='help.html'" style="cursor: pointer;"><i class="fas fa-headset"></i> 24/7 Support</span>
           </div>
         </div>
         <div class="hero-img-wrap">
@@ -1184,11 +1397,6 @@
 
       <!-- Search Widget -->
       <div class="search-widget">
-        <div class="trip-tabs">
-          <button class="trip-tab active" onclick="setTripTab(this)">One Way</button>
-          <button class="trip-tab" onclick="setTripTab(this)">Round Trip</button>
-          <button class="trip-tab" onclick="setTripTab(this)">Multi City</button>
-        </div>
         <div class="search-fields">
           <div class="search-field">
             <label>From</label>
@@ -1244,12 +1452,6 @@
       <!-- Feature Cards -->
       <div class="section-pad">
         <div class="feature-grid">
-          <div class="feature-card" onclick="window.location.href='buses.html'">
-            <div class="feature-icon purple"><i class="fas fa-bolt"></i></div>
-            <h3>Instant Booking</h3>
-            <p>Book your tickets in just a few clicks.</p>
-            <div class="feature-arrow"><i class="fas fa-arrow-right"></i></div>
-          </div>
           <div class="feature-card">
             <div class="feature-icon green"><i class="fas fa-shield-alt"></i></div>
             <h3>Secure &amp; Safe</h3>
@@ -1262,7 +1464,7 @@
             <p>Multiple direct routes connecting key cities.</p>
             <div class="feature-arrow"><i class="fas fa-arrow-right"></i></div>
           </div>
-          <div class="feature-card">
+          <div class="feature-card" onclick="window.location.href='help.html'" style="cursor: pointer;">
             <div class="feature-icon orange"><i class="fas fa-headset"></i></div>
             <h3>24/7 Support</h3>
             <p>Our support team is always here for you.</p>
@@ -1271,44 +1473,26 @@
         </div>
       </div>
 
-      <!-- Offer Banner -->
-      <div class="offer-banner">
-        <div class="offer-text">
-          <h2>Save More on Every Journey</h2>
-          <p>Exclusive offers and discounts on your favorite routes. Limited time only!</p>
-          <button class="offer-explore-btn" onclick="showOffersToast()">
-            <i class="fas fa-tag"></i> Explore Offers
-          </button>
-        </div>
-        <div class="offer-badge-wrap">
-          <div class="offer-pct-badge">
-            <span class="pct">30%</span>
-            <span class="pct-label">UP TO<br>OFF</span>
-          </div>
-          <img src="busflux_offer_gift.png" alt="Offer" class="offer-gift-img" onerror="this.style.display='none'">
-        </div>
-      </div>
-
       <!-- Stats -->
       <div class="stats-section" id="statsSection">
         <div class="stat-item">
           <div class="stat-icon purple"><i class="fas fa-users"></i></div>
           <div class="stat-data">
-            <strong>10K+</strong>
+            <strong id="stat-users">Loading...</strong>
             <span>Happy Customers</span>
           </div>
         </div>
         <div class="stat-item">
           <div class="stat-icon blue"><i class="fas fa-bus"></i></div>
           <div class="stat-data">
-            <strong>1,200+</strong>
+            <strong id="stat-buses">Loading...</strong>
             <span>Daily Bus Services</span>
           </div>
         </div>
         <div class="stat-item">
           <div class="stat-icon green"><i class="fas fa-route"></i></div>
           <div class="stat-data">
-            <strong>250+</strong>
+            <strong id="stat-routes">Loading...</strong>
             <span>Routes Covered</span>
           </div>
         </div>
@@ -1332,6 +1516,65 @@
         </div>
       </div>
 
+      <!-- Reviews Section -->
+      <div class="reviews-section">
+        <div class="reviews-header-flex">
+          <h2 class="reviews-title">What Our Travelers Say</h2>
+          <button class="write-review-btn" id="btnWriteReview"><i class="fas fa-edit"></i> Write a Review</button>
+        </div>
+        <div class="reviews-grid" id="reviewsContainer">
+          
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar">A</div>
+              <div>
+                <div class="review-name">Arun Kumar</div>
+                <div class="review-date">2 days ago</div>
+              </div>
+            </div>
+            <div class="review-rating">
+              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+            </div>
+            <div class="review-text">
+              "Booking was incredibly smooth, and the real-time tracking feature is a lifesaver. The bus arrived right on time!"
+            </div>
+          </div>
+          
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar" style="background:#e0e7ff;color:#4f46e5;">S</div>
+              <div>
+                <div class="review-name">Sneha Patil</div>
+                <div class="review-date">1 week ago</div>
+              </div>
+            </div>
+            <div class="review-rating">
+              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+            </div>
+            <div class="review-text">
+              "The UI is very clean and easy to navigate. Loved the quick booking option and instant wallet refunds on cancellations."
+            </div>
+          </div>
+          
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar" style="background:#dcfce7;color:#16a34a;">V</div>
+              <div>
+                <div class="review-name">Vikram Singh</div>
+                <div class="review-date">3 weeks ago</div>
+              </div>
+            </div>
+            <div class="review-rating">
+              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+            </div>
+            <div class="review-text">
+              "Excellent 24/7 support! Had a minor issue with my ticket and they resolved it in minutes. Highly recommended."
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
     </div><!-- end page-scroll -->
   </div><!-- end main-content -->
 </div><!-- end app-layout -->
@@ -1339,10 +1582,30 @@
 <!-- Hidden navLinks for script.js compatibility -->
 <ul id="navLinks" style="display:none;"></ul>
 
+<!-- Review Modal -->
+<div id="reviewModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeReviewModal">&times;</span>
+    <h2 style="margin-bottom: 20px; color: var(--primary);"><i class="fas fa-star"></i> Rate Your Experience</h2>
+    
+    <div class="star-rating-widget" id="starRatingWidget">
+      <i class="fas fa-star" data-rating="1"></i>
+      <i class="fas fa-star" data-rating="2"></i>
+      <i class="fas fa-star" data-rating="3"></i>
+      <i class="fas fa-star" data-rating="4"></i>
+      <i class="fas fa-star" data-rating="5"></i>
+    </div>
+    
+    <textarea id="reviewComment" rows="4" placeholder="Tell us about your experience..." style="width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: inherit; margin-bottom: 20px; resize: none;"></textarea>
+    
+    <button class="auth-btn" id="submitReviewBtn">Submit Feedback</button>
+  </div>
+</div>
+
 <div id="toastContainer"></div>
 
 <script src="script.js?v=10"></script>
-<script src="ui-layout.js?v=4"></script>
+<script src="ui-layout.js?v=5"></script>
 <style>
   .nav-qr-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -1394,8 +1657,13 @@
     document.getElementById('navQrModalOverlay').classList.remove('open');
   }
 </script>
+
+<!-- Chatbot -->
+<link rel="stylesheet" href="chatbot.css">
+<script src="chatbot.js"></script>
 </body>
 </html>
+
 
 
 

@@ -1,0 +1,245 @@
+Created At: 2026-06-30T17:42:40Z
+Completed At: 2026-06-30T17:42:40Z
+File Path: `file:///c:/Users/HP/Documents/busflux2-master/busflux2-master/frontend/conductor.html`
+Total Lines: 3129
+Total Bytes: 139059
+Showing lines 2880 to 2920
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2880:       if (journeyActive) {
+2881:         btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Fetching Route...`;
+2882:         btn.style.background = "var(--primary-dark)";
+2883:         
+2884:         const bus = buses.find(b => b._id === busId);
+2885:         const rawStops = bus ? [bus.from, ...(bus.stops || []), bus.to] : [];
+2886:         const allStops = rawStops.filter((stop, idx, arr) => idx === 0 || stop !== arr[idx - 1]);
+2887:         
+2888:         const stopCoordinates = {
+2889:           "manjandy": [74.9018, 12.7925],
+2890:           "manjanady": [74.9018, 12.7925],
+2891:           "manjanadi": [74.9018, 12.7925],
+2892:           "thaudugoli": [74.8967, 12.8021],
+2893:           "natekal": [74.8885, 12.8122],
+2894:           "deralakatte": [74.8698, 12.8158],
+2895:           "kuthar": [74.8631, 12.8242],
+2896:           "thokkottu": [74.8550, 12.8273],
+2897:           "nagori": [74.8615, 12.8610],
+2898:           "pumpwell": [74.8580, 12.8643],
+2899:           "kankanady": [74.8540, 12.8683],
+2900:           "balmatta": [74.8490, 12.8685],
+2901:           "jyothi": [74.8465, 12.8708],
+2902:           "jyothi circle": [74.8465, 12.8708],
+2903:           "hampankatta": [74.8415, 12.8687],
+2904:           "state bank": [74.8415, 12.8687],
+2905:           "mangalore": [74.8436, 12.8700]
+2906:         };
+2907: 
+2908:         function getDistSq(p1, p2) {
+2909:           return (p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2;
+2910:         }
+2911: 
+2912:         async function fetchRealisticRoute() {
+2913:           try {
+2914:              let validCoords = [];
+2915:              let stopRealCoords = [];
+2916:              
+2917:              for (let stop of allStops) {
+2918:                 let key = stop.toLowerCase().trim();
+2919:                 let coord = null;
+2920:                 if (stopCoordinates[key]) {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+Created At: 2026-06-30T17:42:46Z
+Completed At: 2026-06-30T17:42:46Z
+File Path: `file:///c:/Users/HP/Documents/busflux2-master/busflux2-master/frontend/conductor.html`
+Total Lines: 3129
+Total Bytes: 139059
+Showing lines 2921 to 2960
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2921:                    coord = stopCoordinates[key];
+2922:                    validCoords.push(coord.join(','));
+2923:                 } else {
+2924:                    try {
+2925:                      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(stop + ' Mangalore')}`);
+2926:                      const data = await res.json();
+2927:                      if (data && data.length > 0) {
+2928:                         coord = [parseFloat(data[0].lon), parseFloat(data[0].lat)];
+2929:                         validCoords.push(coord.join(','));
+2930:                      }
+2931:                    } catch(e) { console.error("Nominatim error", e); }
+2932:                 }
+2933:                 stopRealCoords.push(coord);
+2934:              }
+2935:              
+2936:              if (validCoords.length < 2) {
+2937:                 validCoords = ["74.8436,12.8700", "74.8698,12.8158"];
+2938:              }
+2939:              
+2940:              // Generate a smooth route using only Start and End to avoid OSRM U-turn detours for intermediate waypoints
+2941:              const routeEndpoints = [validCoords[0], validCoords[validCoords.length - 1]];
+2942:              const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${routeEndpoints.join(';')}?overview=full&geometries=geojson`;
+2943:              const osrmRes = await fetch(osrmUrl);
+2944:              const data = await osrmRes.json();
+2945:              
+2946:              if (!data || !data.routes || data.routes.length === 0) {
+2947:                  throw new Error("No route found from OSRM");
+2948:              }
+2949:              
+2950:              const coords = data.routes[0].geometry.coordinates;
+2951:              
+2952:              btn.innerHTML = `<i class="fas fa-stop"></i> Stop Journey`;
+2953:              btn.style.background = "var(--danger)";
+2954:              
+2955:              let stopIndices = [];
+2956:              for (let i = 0; i < allStops.length; i++) {
+2957:                 let targetCoord = stopRealCoords[i];
+2958:                 if (!targetCoord) {
+2959:                   stopIndices.push(Math.floor(coords.length * (i / (allStops.length - 1))));
+2960:                   continue;
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+Created At: 2026-06-30T17:42:51Z
+Completed At: 2026-06-30T17:42:52Z
+File Path: `file:///c:/Users/HP/Documents/busflux2-master/busflux2-master/frontend/conductor.html`
+Total Lines: 3129
+Total Bytes: 139059
+Showing lines 2961 to 3000
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2961:                 }
+2962:                 
+2963:                 let minDist = Infinity;
+2964:                 let minIdx = 0;
+2965:                 for (let j = 0; j < coords.length; j++) {
+2966:                   let d = getDistSq(targetCoord, coords[j]);
+2967:                   if (d < minDist) {
+2968:                     minDist = d;
+2969:                     minIdx = j;
+2970:                   }
+2971:                 }
+2972:                 stopIndices.push(minIdx);
+2973:              }
+2974:              
+2975:              for (let i = 1; i < stopIndices.length; i++) {
+2976:                 if (stopIndices[i] <= stopIndices[i-1]) stopIndices[i] = stopIndices[i-1] + 1;
+2977:              }
+2978:              if (stopIndices[stopIndices.length - 1] >= coords.length) {
+2979:                 stopIndices[stopIndices.length - 1] = coords.length - 1;
+2980:              }
+2981: 
+2982:              startSimulation(coords, stopIndices);
+2983:              
+2984:           } catch(err) {
+2985:              console.error("Geocoding/Routing Error:", err);
+2986:              alert("Failed to load realistic route. Using default tracking.");
+2987:              journeyActive = false;
+2988:              btn.innerHTML = `<i class="fas fa-play"></i> Start Journey`;
+2989:           }
+2990:         }
+2991:         
+2992:         function startSimulation(coords, stopIndices) {
+2993:             let currentIndex = 0;
+2994:             let currentStopIndex = 0;
+2995:             
+2996:             statusEl.textContent = `Status: Stopped at ${allStops[0]} (15s)`;
+2997:             
+2998:             conductorSocket.emit("conductor_location_update", {
+2999:               busId,
+3000:               nextStop: `ARRIVED AT: ${allStops[0]}`,
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+Created At: 2026-06-30T17:42:57Z
+Completed At: 2026-06-30T17:42:57Z
+File Path: `file:///c:/Users/HP/Documents/busflux2-master/busflux2-master/frontend/conductor.html`
+Total Lines: 3129
+Total Bytes: 139059
+Showing lines 3001 to 3040
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3001:               lat: coords[0][1],
+3002:               lng: coords[0][0],
+3003:               routeCoordinates: coords
+3004:             });
+3005:             
+3006:             let isWaiting = true;
+3007:             let waitTicks = 15;
+3008: 
+3009:             journeyInterval = setInterval(() => {
+3010:               if (!journeyActive) {
+3011:                 clearInterval(journeyInterval);
+3012:                 return;
+3013:               }
+3014:               
+3015:               if (isWaiting) {
+3016:                 waitTicks--;
+3017:                 if (waitTicks <= 0) {
+3018:                   isWaiting = false;
+3019:                   currentStopIndex++;
+3020:                   if (currentStopIndex < allStops.length) {
+3021:                     const nxtStop = allStops[currentStopIndex];
+3022:                     conductorSocket.emit("conductor_location_update", {
+3023:                       busId,
+3024:                       nextStop: nxtStop
+3025:                     });
+3026:                     const manualSel = document.getElementById("manualNextStop");
+3027:                     if (manualSel) manualSel.value = nxtStop;
+3028:                     statusEl.textContent = `Status: Driving to ${nxtStop}`;
+3029:                     addNotification("Departed", `Heading to ${nxtStop}`, "info");
+3030:                   }
+3031:                 }
+3032:                 return;
+3033:               }
+3034:               
+3035:               if (currentIndex >= coords.length - 1) {
+3036:                 clearInterval(journeyInterval);
+3037:                 journeyActive = false;
+3038:                 btn.innerHTML = `<i class="fas fa-play"></i> Start Journey`;
+3039:                 statusEl.textContent = "Status: Journey Completed!";
+3040:                 addNotification("Journey Complete", "Bus reached the final destination.", "success");
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+Created At: 2026-06-30T17:43:04Z
+Completed At: 2026-06-30T17:43:04Z
+File Path: `file:///c:/Users/HP/Documents/busflux2-master/busflux2-master/frontend/conductor.html`
+Total Lines: 3129
+Total Bytes: 139059
+Showing lines 3041 to 3080
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+3041:                 
+3042:                 conductorSocket.emit("conductor_location_update", {
+3043:                   busId,
+3044:                   nextStop: "ARRIVED: " + allStops[allStops.length - 1]
+3045:                 });
+3046:                 return;
+3047:               }
+3048:               
+3049:               currentIndex += 2;
+3050:               if (currentIndex >= coords.length) currentIndex = coords.length - 1;
+3051:               
+3052:               const currentPoint = coords[currentIndex];
+3053:               conductorSocket.emit("conductor_location_update", {
+3054:                 busId,
+3055:                 lat: currentPoint[1],
+3056:                 lng: currentPoint[0]
+3057:               });
+3058:               
+3059:               if (currentStopIndex < allStops.length && currentIndex >= stopIndices[currentStopIndex]) {
+3060:                 isWaiting = true;
+3061:                 waitTicks = 15;
+3062:                 const arrStop = allStops[currentStopIndex];
+3063:                 conductorSocket.emit("conductor_location_update", {
+3064:                   busId,
+3065:                   nextStop: `ARRIVED AT: ${arrStop}`
+3066:                 });
+3067:                 statusEl.textContent = `Status: Stopped at ${arrStop} (15s)`;
+3068:                 addNotification("Bus Stopped", `Arrived at ${arrStop}`, "success");
+3069:               }
+3070:             }, 1000);
+3071:         }
+3072:         
+3073:         fetchRealisticRoute();
+3074:           
+3075:       } else {
+3076:         btn.innerHTML = `<i class="fas fa-play"></i> Start Journey`;
+3077:         btn.style.background = "var(--primary)";
+3078:         statusEl.textContent = "Status: Not Started";
+3079:         statusEl.style.color = "var(--text-muted)";
+3080:         
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

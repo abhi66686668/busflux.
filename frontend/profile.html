@@ -115,9 +115,7 @@
         <a href="buses.html" class="nav-item" id="sideNavBuses">
           <i class="fas fa-bus"></i> Buses
         </a>
-        <a href="bookings.html" class="nav-item" id="sideNavBookings">
-          <i class="fas fa-ticket"></i> My Bookings
-        </a>
+        
         <a href="wallet.html" class="nav-item" id="sideNavWallet">
           <i class="fas fa-wallet"></i> Wallet
         </a>
@@ -125,10 +123,8 @@
         <a href="#" class="nav-item" onclick="showOffersToast(); return false;">
           <i class="fas fa-tag"></i> Offers
         </a>
-        <a href="#" class="nav-item" onclick="scrollToStats(); return false;">
-          <i class="fas fa-location-dot"></i> Track Bus
-        </a>
-        <a href="#" class="nav-item" onclick="showHelpToast(); return false;">
+        <a href="buses.html" class="nav-item"><i class="fas fa-location-dot"></i> Track Bus</a>
+        <a href="help.html" class="nav-item">
           <i class="fas fa-circle-question"></i> Help Center
         </a>
       </nav>
@@ -159,11 +155,7 @@
         <button class="mobile-menu-btn" onclick="openSidebar()" aria-label="Open menu">
           <i class="fas fa-bars"></i>
         </button>
-        <div class="search-bar">
-          <i class="fas fa-search"></i>
-          <input type="text" placeholder="Search for routes, cities or buses..." id="globalSearch"
-            oninput="handleGlobalSearch(this.value)" autocomplete="off">
-        </div>
+
                         <div class="top-bar-actions">
         </div>
       </header>
@@ -362,8 +354,12 @@
     });
   </script>
 <script src="ui-layout.js?v=4"></script>
+
 </body>
 </html>
+
+
+
 
 
 

@@ -1046,7 +1046,7 @@
             <div class="terms-row">
               <input type="checkbox" id="agreeTerms" required>
               <label for="agreeTerms">
-                I agree to the <a href="#" onclick="return false;">Terms &amp; Conditions</a> and <a href="#" onclick="return false;">Privacy Policy</a>
+                I agree to the <a href="#" onclick="openLegalModal('termsModal'); return false;">Terms &amp; Conditions</a> and <a href="#" onclick="openLegalModal('privacyModal'); return false;">Privacy Policy</a>
               </label>
             </div>
 
@@ -1126,72 +1126,21 @@
 
               <input type="hidden" id="institutionName" value="">
 
-              <div class="form-group" id="schoolNameGroup" style="display:none;">
-                <label class="form-label" for="schoolName">School Name</label>
-                <div class="input-wrap">
-                  <i class="fas fa-building input-icon"></i>
-                  <input type="text" id="schoolName" list="schoolList" placeholder="Search or select school"
-                    oninput="document.getElementById('institutionName').value = this.value">
-                  <datalist id="schoolList"></datalist>
-                </div>
-              </div>
-
-              <div class="form-group" id="collegeNameGroup" style="display:none;">
-                <label class="form-label" for="collegeName">College Name</label>
-                <div class="input-wrap">
-                  <i class="fas fa-building input-icon"></i>
-                  <input type="text" id="collegeName" list="collegeList" placeholder="Search or select college"
-                    oninput="handleCollegeChange()">
-                  <datalist id="collegeList"></datalist>
-                </div>
-              </div>
-
-              <div class="form-group" id="companyNameGroup" style="display:none;">
-                <label class="form-label" for="companyName">Company Name</label>
-                <div class="input-wrap">
-                  <i class="fas fa-building input-icon"></i>
-                  <input type="text" id="companyName" placeholder="Enter company name"
-                    oninput="document.getElementById('institutionName').value = this.value">
-                </div>
-              </div>
-
-              <div class="form-group" id="courseGroup" style="display:none;">
-                <label class="form-label" for="course">Course</label>
-                <div class="input-wrap">
-                  <i class="fas fa-book input-icon"></i>
-                  <input type="text" id="course" list="courseList" placeholder="Search or select course">
-                  <datalist id="courseList"></datalist>
-                </div>
-              </div>
-
-              <div class="form-group" id="studentIdGroup" style="display:none;">
-                <label class="form-label" for="studentIdNumber">ID Number</label>
-                <div class="input-wrap">
-                  <i class="fas fa-id-card input-icon"></i>
-                  <input type="text" id="studentIdNumber" placeholder="Enter ID Number">
-                </div>
-              </div>
-
-              <div class="form-group" id="passingYearGroup" style="display:none;">
-                <label class="form-label" for="passingYear">Year (Passing/Joining)</label>
-                <div class="input-wrap">
-                  <i class="fas fa-calendar-alt input-icon"></i>
-                  <input type="number" id="passingYear" placeholder="e.g. 2028" min="1950" max="2100">
-                </div>
-              </div>
-
-              <div class="form-group" id="studentIdPhotoGroup" style="display:none;">
-                <label class="form-label">ID Card Photo</label>
-                <div class="upload-area" id="studentIdUploadArea">
-                  <input type="file" id="studentIdPhoto" accept="image/*"
-                    onchange="previewFile(this,'studentIdPreview','studentIdUploadName')">
-                  <i class="fas fa-id-badge"></i>
-                  <p>Click to upload ID Card</p>
+              <div class="form-group" id="certificatePhotoGroup" style="display:none;">
+                <label class="form-label">College Certificate</label>
+                <div class="upload-area" id="certificateUploadArea">
+                  <input type="file" id="certificatePhoto" accept="image/*"
+                    onchange="previewFile(this,'certificatePreview','certificateUploadName'); processCertificate(this);">
+                  <i class="fas fa-file-contract" id="certScanIcon"></i>
+                  <p id="certScanText">Click to upload Certificate</p>
                   <p style="font-size:0.72rem;opacity:0.6;margin-top:3px;">JPG, PNG, WEBP</p>
-                  <div class="upload-name" id="studentIdUploadName"></div>
-                  <img class="upload-preview" id="studentIdPreview" alt="ID preview">
+                  <div class="upload-name" id="certificateUploadName"></div>
+                  <img class="upload-preview" id="certificatePreview" alt="Certificate preview">
                 </div>
               </div>
+
+              <input type="hidden" id="startingYear" value="">
+              <input type="hidden" id="endingYear" value="">
             </div>
 
             <div class="step-actions">
@@ -1208,18 +1157,7 @@
         </form>
 
         <!-- Social Signup -->
-        <div class="or-divider">or sign up with</div>
-        <div class="social-row">
-          <button class="social-btn" type="button" onclick="socialSignup('google')">
-            <i class="fab fa-google"></i>
-          </button>
-          <button class="social-btn" type="button" onclick="socialSignup('apple')">
-            <i class="fab fa-apple"></i>
-          </button>
-          <button class="social-btn" type="button" onclick="socialSignup('facebook')">
-            <i class="fab fa-facebook"></i>
-          </button>
-        </div>
+
 
       </div>
 
@@ -1478,13 +1416,14 @@
       const studentSec = document.getElementById('studentSection');
       if (studentSec && studentSec.style.display === 'block') {
         const instType = document.getElementById('institutionType').value;
-        const instName = document.getElementById('institutionName').value.trim();
-        const course = (instType === 'College' || instType === 'PU College' || instType === 'Degree College') ? document.getElementById('course').value : true;
-        const studId = document.getElementById('studentIdPhoto').files[0];
+        const certPhoto = document.getElementById('certificatePhoto') ? document.getElementById('certificatePhoto').files[0] : null;
         
         if (instType === 'School' || instType === 'College' || instType === 'PU College' || instType === 'Degree College') {
-          if (!instName || !course || !studId) {
-            showToast('Please complete all Occupation Details.', 'warning'); return;
+          if (!certPhoto) {
+            showToast('Please upload your College Certificate.', 'warning'); return;
+          }
+          if (!document.getElementById('startingYear').value || !document.getElementById('endingYear').value) {
+            showToast('Please verify your Starting and Ending Year.', 'warning'); return;
           }
         }
         if (!instType) {
@@ -1509,12 +1448,10 @@
 
       if (studentSec && studentSec.style.display === 'block') {
         formData.append('institutionType', document.getElementById('institutionType').value || '');
-        formData.append('institutionName', document.getElementById('institutionName').value.trim() || '');
-        formData.append('course', document.getElementById('course').value || '');
-        formData.append('studentIdNumber', document.getElementById('studentIdNumber').value || '');
-        formData.append('passingYear', document.getElementById('passingYear').value || '');
-        const sPhoto = document.getElementById('studentIdPhoto').files[0];
-        if (sPhoto) formData.append('studentIdPhoto', sPhoto);
+        formData.append('startingYear', document.getElementById('startingYear').value || '');
+        formData.append('endingYear', document.getElementById('endingYear').value || '');
+        const cPhoto = document.getElementById('certificatePhoto') ? document.getElementById('certificatePhoto').files[0] : null;
+        if (cPhoto) formData.append('certificatePhoto', cPhoto);
       }
 
       try {
@@ -1788,24 +1725,69 @@
       if (colName && colName.value) handleCollegeChange();
     });
 
+    async function processCertificate(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const icon = document.getElementById('certScanIcon');
+      const text = document.getElementById('certScanText');
+
+      icon.className = 'fas fa-spinner fa-spin';
+      icon.style.color = '#6C3FD6';
+      text.textContent = 'Scanning Certificate... Please wait.';
+
+      try {
+        const result = await Tesseract.recognize(file, 'eng');
+        const textData = result.data.text;
+        
+        // Look for 4-digit years between 1950 and 2100
+        const yearRegex = /\b(19[5-9]\d|20\d{2})\b/g;
+        const yearsFound = [];
+        let match;
+        while ((match = yearRegex.exec(textData)) !== null) {
+          yearsFound.push(parseInt(match[1]));
+        }
+
+        if (yearsFound.length >= 2) {
+          // Get min and max year as starting and ending
+          const startYear = Math.min(...yearsFound);
+          const endYear = Math.max(...yearsFound);
+          
+          if (startYear !== endYear && (endYear - startYear) <= 10) {
+            document.getElementById('startingYear').value = startYear;
+            document.getElementById('endingYear').value = endYear;
+            
+            icon.className = 'fas fa-check-circle';
+            icon.style.color = '#10B981';
+            text.textContent = 'Years extracted successfully!';
+            showToast('Certificate years extracted!', 'success');
+            return;
+          }
+        }
+        
+        // If we didn't find clear years or the difference is weird
+        icon.className = 'fas fa-exclamation-triangle';
+        icon.style.color = '#F59E0B';
+        text.textContent = 'Could not clearly extract years. Please upload a clearer image.';
+        showToast('Could not extract years automatically. Please upload a clearer image.', 'warning');
+        
+      } catch (error) {
+        console.error(error);
+        icon.className = 'fas fa-times-circle';
+        icon.style.color = '#EF4444';
+        text.textContent = 'Scan failed. Please try again.';
+        showToast('Failed to scan certificate.', 'error');
+      }
+    }
+
     function handleInstitutionTypeChange() {
       const type = document.getElementById('institutionType') ? document.getElementById('institutionType').value : '';
       document.getElementById('institutionName').value = '';
-      document.getElementById('schoolName').value = '';
-      document.getElementById('collegeName').value = '';
       if(document.getElementById('companyName')) document.getElementById('companyName').value = '';
-      document.getElementById('course').value = '';
-      document.getElementById('courseList').innerHTML = '';
       
-      document.getElementById('schoolNameGroup').style.display = type === 'School' ? 'block' : 'none';
-      document.getElementById('collegeNameGroup').style.display = (type === 'PU College' || type === 'Degree College' || type === 'College') ? 'block' : 'none';
-      document.getElementById('courseGroup').style.display = (type === 'PU College' || type === 'Degree College' || type === 'College') ? 'block' : 'none';
       if(document.getElementById('companyNameGroup')) document.getElementById('companyNameGroup').style.display = 'none';
       
-      const needsId = (type === 'School' || type === 'PU College' || type === 'Degree College' || type === 'College');
-      if(document.getElementById('studentIdGroup')) document.getElementById('studentIdGroup').style.display = needsId ? 'block' : 'none';
-      if(document.getElementById('passingYearGroup')) document.getElementById('passingYearGroup').style.display = needsId ? 'block' : 'none';
-      if(document.getElementById('studentIdPhotoGroup')) document.getElementById('studentIdPhotoGroup').style.display = needsId ? 'block' : 'none';
+      const needsCert = (type === 'School' || type === 'PU College' || type === 'Degree College' || type === 'College');
+      if(document.getElementById('certificatePhotoGroup')) document.getElementById('certificatePhotoGroup').style.display = needsCert ? 'block' : 'none';
     }
 
     function handleCollegeChange() {
@@ -1821,8 +1803,119 @@
       }
     }
   </script>
+
+  <!-- Legal Modals -->
+  <div class="legal-modal-overlay" id="termsModal" onclick="closeLegalModal(event, 'termsModal')">
+    <div class="legal-modal-content">
+      <div class="legal-modal-header">
+        <h2>BusFlux Terms & Conditions</h2>
+        <button class="legal-modal-close" onclick="closeLegalModal(null, 'termsModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="legal-modal-body">
+        <h4>1. Acceptance of Terms</h4>
+        <p>By registering for an account on BusFlux, you agree to be bound by these Terms and Conditions regarding bus reservations and travel. If you do not agree, please do not use our platform.</p>
+        
+        <h4>2. Bus Ticket Reservations</h4>
+        <p>BusFlux acts as a ticketing platform. The respective bus operators provide the actual transportation service. Bus departure times, routes, and seat availability are subject to change by the operator.</p>
+
+        <h4>3. Passenger Conduct</h4>
+        <p>Passengers must behave in a respectful manner. Bus operators reserve the right to deny boarding to any passenger who is intoxicated, abusive, or poses a safety risk, without refund.</p>
+
+        <h4>4. Luggage Policy</h4>
+        <p>Each passenger is typically allowed one standard checked bag and one small carry-on. Excess or oversized luggage may incur additional fees directly from the bus operator at the time of boarding.</p>
+
+        <h4>5. Cancellations & Refunds</h4>
+        <p>Tickets can be canceled subject to the cancellation policy of the specific bus operator. BusFlux processing fees and platform charges are strictly non-refundable.</p>
+
+        <h4>6. Platform Fees</h4>
+        <p>A nominal convenience fee may be added to ticket purchases to maintain our platform services.</p>
+      </div>
+      <div class="legal-modal-footer">
+        <button class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; border-radius: 8px;" onclick="closeLegalModal(null, 'termsModal')">I Understand</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal-overlay" id="privacyModal" onclick="closeLegalModal(event, 'privacyModal')">
+    <div class="legal-modal-content">
+      <div class="legal-modal-header">
+        <h2>Privacy Policy</h2>
+        <button class="legal-modal-close" onclick="closeLegalModal(null, 'privacyModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="legal-modal-body">
+        <h4>1. Information Collection</h4>
+        <p>We collect information such as your name, email, phone number, and booking history to provide you with a seamless bus booking experience.</p>
+        
+        <h4>2. Use of Information</h4>
+        <p>Your details are shared with bus operators solely for the purpose of confirming reservations and verifying passenger manifests.</p>
+
+        <h4>3. Payment Data</h4>
+        <p>BusFlux does not store your credit card information. All payments are processed through secure, PCI-compliant third-party gateways.</p>
+      </div>
+      <div class="legal-modal-footer">
+        <button class="btn-primary" style="width: 100%; padding: 12px; font-weight: bold; border-radius: 8px;" onclick="closeLegalModal(null, 'privacyModal')">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .legal-modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .legal-modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .legal-modal-content {
+      background: var(--bg-card, #FFFFFF); color: var(--text-dark, #1A1A2E);
+      width: 90%; max-width: 500px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      display: flex; flex-direction: column;
+      max-height: 85vh;
+    }
+    .legal-modal-overlay.show .legal-modal-content { transform: translateY(0); }
+    .legal-modal-header {
+      padding: 20px 24px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .legal-modal-header h2 { font-size: 1.25rem; font-weight: 700; color: var(--text); margin: 0; }
+    .legal-modal-close {
+      background: transparent; border: none; font-size: 1.2rem; color: var(--text-muted); cursor: pointer;
+      transition: color 0.2s;
+    }
+    .legal-modal-close:hover { color: var(--danger); }
+    .legal-modal-body {
+      padding: 24px; overflow-y: auto; line-height: 1.6; font-size: 0.95rem;
+    }
+    .legal-modal-body h4 { font-size: 1rem; color: var(--primary); margin: 16px 0 6px 0; font-weight: 700; }
+    .legal-modal-body h4:first-child { margin-top: 0; }
+    .legal-modal-body p { margin-bottom: 12px; color: var(--text-muted); }
+    .legal-modal-footer {
+      padding: 16px 24px; border-top: 1px solid var(--border);
+    }
+  </style>
+
+  <script>
+    function openLegalModal(id) {
+      document.getElementById(id).classList.add('show');
+    }
+    function closeLegalModal(e, id) {
+      if (e && e.target !== document.getElementById(id)) return;
+      document.getElementById(id).classList.remove('show');
+    }
+  </script>
+
 </body>
 </html>
+
+
+
 
 
 

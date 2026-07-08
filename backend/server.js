@@ -26,6 +26,9 @@ const connectDB =
 
 
 
+// ================= CRON JOBS =================
+const { startCronJobs } = require("./cronJobs");
+
 // ================= ROUTES =================
 
 const authRoutes =
@@ -41,6 +44,8 @@ const adminRoutes =
   require("./routes/adminRoutes");
 
 const paymentRoutes = require("./routes/paymentRoutes");
+const statsRoutes = require("./routes/statsRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 
 
@@ -60,17 +65,66 @@ const io = new Server(server, { cors: { origin: "*" } });
 
 app.set('io', io); // Make io available in routes via req.app.get('io')
 
+const onlineUsers = new Set();
+
 io.on('connection', (socket) => {
   console.log('A client connected:', socket.id);
+  // Send current online users state immediately
+  socket.emit('online_users_update', Array.from(onlineUsers));
   
   socket.on('join_room', (userId) => {
     if (userId) {
-      socket.join(userId.toString());
-      console.log(`Socket ${socket.id} joined room: ${userId}`);
+      const uid = userId.toString();
+      socket.join(uid);
+      socket.userId = uid;
+      onlineUsers.add(uid);
+      console.log(`Socket ${socket.id} joined room: ${uid}`);
+      // Broadcast online status to everyone
+      io.emit('online_users_update', Array.from(onlineUsers));
+    }
+  });
+
+  // Cache to store the latest state (location, route, nextStop) of each bus
+  const activeBusData = {};
+
+  // Tracking Rooms
+  socket.on('join_bus_room', (busId) => {
+    if (busId) {
+      socket.join(`bus_${busId}`);
+      console.log(`Socket ${socket.id} joined bus room: bus_${busId}`);
+      
+      // If we have cached data for this bus, send it to the newly joined client immediately
+      if (activeBusData[busId]) {
+        socket.emit('bus_location_update', activeBusData[busId]);
+      }
+    }
+  });
+
+  socket.on('conductor_location_update', (data) => {
+    // data: { busId, lat, lng, routeCoordinates, nextStop }
+    if (data && data.busId) {
+      // Update cache. Only overwrite routeCoordinates if they are provided in the new data.
+      if (!activeBusData[data.busId]) {
+        activeBusData[data.busId] = {};
+      }
+      activeBusData[data.busId] = {
+        ...activeBusData[data.busId],
+        ...data
+      };
+      
+      io.to(`bus_${data.busId}`).emit('bus_location_update', data);
     }
   });
 
   socket.on('disconnect', () => {
+    if (socket.userId) {
+      const room = io.sockets.adapter.rooms.get(socket.userId);
+      // If no more sockets are connected for this user (they closed all tabs)
+      if (!room || room.size === 0) {
+        onlineUsers.delete(socket.userId);
+        io.emit('online_users_update', Array.from(onlineUsers));
+      }
+    }
     console.log('Client disconnected:', socket.id);
   });
 });
@@ -126,13 +180,21 @@ app.use(
 
 // BOOKINGS
 app.use(
-
   "/api/bookings",
-
   bookingRoutes
-
 );
 
+// STATS
+app.use(
+  "/api/stats",
+  statsRoutes
+);
+
+// REVIEWS
+app.use(
+  "/api/reviews",
+  reviewRoutes
+);
 
 
 // ADMIN
@@ -151,9 +213,20 @@ app.use(
   paymentRoutes
 );
 
+// SETTINGS
+app.use(
+  "/api/settings",
+  require("./routes/settingRoutes")
+);
+
 // CONDUCTOR
 app.use("/api/conductor", require("./routes/conductorRoutes"));
 
+// SETTLEMENT
+app.use("/api/settlement", require("./routes/settlementRoutes"));
+
+// CHATBOT
+app.use("/api/chat", require("./routes/chatbotRoutes"));
 
 
 // ================= STATIC FRONTEND =================
@@ -174,6 +247,9 @@ const PORT =
   5000;
 
 
+
+// Start cron jobs
+startCronJobs(io);
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

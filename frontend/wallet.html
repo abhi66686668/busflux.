@@ -272,6 +272,17 @@
       .recharge-section { padding: 26px 20px; }
       .pay-methods-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
     }
+    
+    /* Transaction List Scrollbar */
+    #transactionsList {
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+    #transactionsList::-webkit-scrollbar { width: 6px; }
+    #transactionsList::-webkit-scrollbar-track { background: transparent; }
+    #transactionsList::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    #transactionsList::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 
   <!-- PWA Manifest and Mobile Web App Support -->
@@ -298,9 +309,7 @@
         <a href="buses.html" class="nav-item" id="sideNavBuses">
           <i class="fas fa-bus"></i> Buses
         </a>
-        <a href="bookings.html" class="nav-item" id="sideNavBookings">
-          <i class="fas fa-ticket"></i> My Bookings
-        </a>
+        
         <a href="wallet.html" class="nav-item active" id="sideNavWallet">
           <i class="fas fa-wallet"></i> Wallet
         </a>
@@ -311,10 +320,8 @@
         <a href="#" class="nav-item" onclick="showOffersToast(); return false;">
           <i class="fas fa-tag"></i> Offers
         </a>
-        <a href="#" class="nav-item" onclick="scrollToStats(); return false;">
-          <i class="fas fa-location-dot"></i> Track Bus
-        </a>
-        <a href="#" class="nav-item" onclick="showHelpToast(); return false;">
+        <a href="buses.html" class="nav-item"><i class="fas fa-location-dot"></i> Track Bus</a>
+        <a href="help.html" class="nav-item">
           <i class="fas fa-circle-question"></i> Help Center
         </a>
       </nav>
@@ -362,7 +369,17 @@
           <span>BusFlux Wallet</span>
         </div>
         <div class="wallet-balance-value" id="walletBalance">₹ --</div>
-        <div class="wallet-balance-sub">Available balance · Updated just now</div>
+        <div class="wallet-balance-sub">General balance · Updated just now</div>
+        
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); margin-bottom: 20px;">
+          <div class="wallet-hero-top" style="margin-bottom: 5px;">
+            <i class="fas fa-id-badge"></i>
+            <span>Monthly Pass Balance</span>
+          </div>
+          <div class="wallet-balance-value" id="passBalance" style="font-size: 2rem;">₹ --</div>
+          <div class="wallet-balance-sub" id="passExpiry">No active pass</div>
+        </div>
+
         <div class="wallet-brand-row">
           <i class="fas fa-shield-halved"></i>
           <span>Secure Digital Wallet</span>
@@ -375,36 +392,49 @@
       </div>
     </div>
 
-    <!-- â•â•â•â•â•â•â•â•â•â• BUS PASSES & SUBSCRIPTIONS â•â•â•â•â•â•â•â•â•â• -->
+    <!-- ── BUS PASSES & SUBSCRIPTIONS ── -->
     <div class="recharge-section" style="margin-bottom: 28px;">
       <div class="recharge-title"><i class="fas fa-id-card-clip" style="margin-right:6px"></i>Bus Passes & Subscriptions</div>
-      <div class="recharge-subtitle">Buy a monthly pass for unlimited travel or get age-based discounts</div>
+      <div class="recharge-subtitle">Buy a wallet pass for travel credit and enjoy seamless travel until validity expires</div>
+
+      <!-- Alert Containers for Expiry & Balance -->
+      <div id="walletAlertContainer" style="margin-bottom: 20px;"></div>
 
       <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
-        <!-- Monthly Pass Option -->
-        <div style="flex: 1; min-width: 250px; background: rgba(108, 63, 214, 0.05); border: 2px solid var(--border); border-radius: 16px; padding: 20px; transition: all 0.2s; position: relative;">
-          <div style="position: absolute; top: 10px; right: 10px; background: rgba(16, 185, 129, 0.2); color: #10b981; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px;">RECOMMENDED</div>
-          <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 5px;">1-Month Commuter Pass</h3>
-          <p style="font-size: 0.8rem; color: var(--text-medium); margin-bottom: 15px;">Valid for 30 days. Gives you maximum convenience.</p>
-          <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 15px;">₹1,500</div>
-          <button style="width: 100%; background: var(--primary-gradient); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer;" onclick="document.getElementById('customAmount').value='1500'; handleCustomInput(); document.getElementById('customAmount').scrollIntoView({behavior: 'smooth'});">Select Pass</button>
+        <!-- Student Pass Option -->
+        <div style="flex: 1; min-width: 250px; background: var(--bg); border: 2px solid var(--border); border-radius: 16px; padding: 20px; transition: all 0.2s;">
+          <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 5px;">🎓 Student Wallet Pass</h3>
+          <p style="font-size: 0.8rem; color: var(--text-medium); margin-bottom: 15px;">Valid for 30 days. Gives you ₹599 Credit.</p>
+          <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 15px;">₹599</div>
+          <button style="width: 100%; background: var(--input-bg); color: var(--text-dark); border: 1px solid var(--border); padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer;" onclick="buyMonthlyPass(599, 30)">Buy Pass</button>
         </div>
+        
         
         <!-- Premium Pass Option -->
         <div style="flex: 1; min-width: 250px; background: var(--bg); border: 2px solid var(--border); border-radius: 16px; padding: 20px; transition: all 0.2s;">
-          <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 5px;">3-Month Saver Pass</h3>
-          <p style="font-size: 0.8rem; color: var(--text-medium); margin-bottom: 15px;">Valid for 90 days. Best value for regular travelers.</p>
-          <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 15px;">₹4,000</div>
-          <button style="width: 100%; background: var(--input-bg); color: var(--text-dark); border: 1px solid var(--border); padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer;" onclick="document.getElementById('customAmount').value='4000'; handleCustomInput(); document.getElementById('customAmount').scrollIntoView({behavior: 'smooth'});">Select Pass</button>
+          <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 5px;">⭐ Premium Wallet Pass</h3>
+          <p style="font-size: 0.8rem; color: var(--text-medium); margin-bottom: 15px;">Valid for 30 days. Gives you ₹1,199 Credit.</p>
+          <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 15px;">₹1,199</div>
+          <button style="width: 100%; background: var(--input-bg); color: var(--text-dark); border: 1px solid var(--border); padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer;" onclick="buyMonthlyPass(1199, 30)">Buy Pass</button>
+        </div>
+
+        <!-- Quarterly Pass Option -->
+        <div style="flex: 1; min-width: 250px; background: var(--bg); border: 2px solid var(--border); border-radius: 16px; padding: 20px; transition: all 0.2s;">
+          <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 5px;">💰 Quarterly Wallet Pass</h3>
+          <p style="font-size: 0.8rem; color: var(--text-medium); margin-bottom: 15px;">Valid for 90 days. Gives you ₹2,399 Credit.</p>
+          <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 15px;">₹2,399</div>
+          <button style="width: 100%; background: var(--input-bg); color: var(--text-dark); border: 1px solid var(--border); padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer;" onclick="buyMonthlyPass(2399, 90)">Buy Pass</button>
         </div>
       </div>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;"><i class="fas fa-info-circle"></i> Note: Online payment will add this as a Pass Subscription to your Wallet. Age-based discounts (Youth, Golden Pass) apply automatically.</p>
-    </div>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; padding-bottom: 25px; border-bottom: 1px solid var(--border);"><i class="fas fa-info-circle"></i> Note: Online payment will add this as a Pass Subscription to your Wallet. Unused balance is carried forward when you renew before expiry.</p>
 
-    <!-- â•â•â•â•â•â•â•â•â•â• RECHARGE SECTION â•â•â•â•â•â•â•â•â•â• -->
-    <div class="recharge-section">
-      <div class="recharge-title"><i class="fas fa-bolt" style="margin-right:6px"></i>Quick Recharge</div>
-      <div class="recharge-subtitle">Choose an amount or enter a custom value</div>
+      <!-- General Balance Recharge inside the same section -->
+      <div style="margin-top: 25px;">
+        <h3 style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 5px;"><i class="fas fa-bolt" style="margin-right:6px; color:#f59e0b;"></i>Top-up General Balance</h3>
+        <p style="font-size: 0.85rem; color: var(--success); font-weight: bold; margin-bottom: 15px; background: rgba(16, 185, 129, 0.1); padding: 8px 12px; border-radius: 6px; display: inline-block; border: 1px dashed var(--success);">
+          <i class="fas fa-gift" style="margin-right: 5px;"></i> Special Offer: Get 10% Extra Bonus on all Wallet Recharges!
+        </p>
+      </div>
 
       <!-- Preset amounts -->
       <div class="preset-grid">
@@ -458,13 +488,12 @@
     <!-- â•â•â•â•â•â•â•â•â•â• TRANSACTION HISTORY SECTION â•â•â•â•â•â•â•â•â•â• -->
     <div class="recharge-section" id="transactionHistorySection" style="margin-top: 28px; display: none;">
       <div class="recharge-title"><i class="fas fa-history" style="margin-right:6px"></i>Transaction History</div>
-      <div class="recharge-subtitle">Your recent wallet recharges and booking deductions</div>
+      <div class="recharge-subtitle">Your recent wallet recharges and deductions</div>
       
       <!-- Transaction Filters -->
       <div class="tx-filters">
         <button class="tx-filter-btn active" onclick="filterTransactions(this, 'all')"><i class="fas fa-list"></i> All</button>
         <button class="tx-filter-btn" onclick="filterTransactions(this, 'recharge')"><i class="fas fa-plus-circle"></i> Recharges</button>
-        <button class="tx-filter-btn" onclick="filterTransactions(this, 'booking')"><i class="fas fa-ticket-alt"></i> Ticket Purchases</button>
       </div>
 
       <div id="transactionsList" style="display: flex; flex-direction: column; gap: 12px;"></div>
@@ -479,17 +508,20 @@
     </div>
   </div>
 
-  <!-- â•â•â•â•â•â•â•â•â•â• DEMO SCANNER MODAL â•â•â•â•â•â•â•â•â•â• -->
+  <!-- ── DEMO SCANNER MODAL ── -->
   <div class="scanner-modal-overlay" id="demoScannerModal">
     <div class="scanner-modal">
       <h2 style="margin:0; font-size: 1.4rem; color: #1e293b;"><i class="fas fa-qrcode" style="color:#6366f1;"></i> Scan to Pay</h2>
       <p style="color: #64748b; font-size: .9rem; margin-top: 6px;">Open GPay / PhonePe and scan</p>
       <div class="scanner-qr-box">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=test@ybl&pn=BusFlux" alt="QR Code">
+        <img id="demoScannerImage" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=test@ybl&pn=BusFlux" alt="QR Code">
       </div>
       <div style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin-top: 10px;" id="demoScannerAmt">₹500</div>
+      
+      <a href="#" id="upiDeepLinkBtn" class="scanner-btn" style="background:#10b981; text-decoration:none; display:inline-block; margin-top:15px; margin-bottom:5px; display:none;" onclick="handleUpiClick(event)"><i class="fas fa-external-link-alt"></i> Open UPI App</a>
+      
       <button class="scanner-btn" id="demoPayBtn" onclick="simulateDemoPayment()">Simulate Successful Scan</button>
-      <button class="scanner-close" onclick="document.getElementById('demoScannerModal').classList.remove('open')">Cancel</button>
+      <button class="scanner-close" onclick="document.getElementById('demoScannerModal').classList.remove('open'); window.isPassPurchase = false;">Cancel</button>
     </div>
   </div>
 
@@ -513,6 +545,18 @@
 
     // ── Load wallet balance & QR ──
     async function loadWalletBalance() {
+      // Fetch dynamic payment QR code
+      try {
+        const qrRes = await fetch(`${WALLET_API}/settings/paymentQRCode`);
+        if (qrRes.ok) {
+          const qrData = await qrRes.json();
+          if (qrData && qrData.value) {
+            window.basePaymentQrCode = qrData.value;
+            document.getElementById('demoScannerImage').src = qrData.value;
+          }
+        }
+      } catch(e) { console.error("Failed to fetch custom QR code"); }
+
       const token = localStorage.getItem("token");
       if (!token) {
         showToast("Please login to access your wallet.", "warning");
@@ -523,15 +567,76 @@
         const res = await fetch(`${WALLET_API}/auth/me`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
-        const user = await res.json();
-        if (res.ok) {
-          document.getElementById("walletBalance").textContent = `₹${(user.balance || 0).toLocaleString('en-IN')}`;
-          if (user.profileQr) {
-            document.getElementById("walletProfileQrImage").src = user.profileQr;
-          }
+        
+        if (!res.ok) {
+          throw new Error("Failed to fetch user data");
         }
+        
+        const user = await res.json();
+        
+        const genBalance = user.balance || 0;
+        document.getElementById("walletBalance").textContent = `₹${genBalance.toLocaleString('en-IN')}`;
+        
+        const passBalance = user.monthlyPassBalance || 0;
+        document.getElementById("passBalance").textContent = `₹${passBalance.toLocaleString('en-IN')}`;
+        
+        if (user.monthlyPassExpiry) {
+           const exp = new Date(user.monthlyPassExpiry);
+           if (exp > new Date()) {
+              document.getElementById("passExpiry").innerHTML = `Valid until: <strong>${exp.toLocaleDateString()}</strong>`;
+           } else {
+              document.getElementById("passExpiry").innerHTML = `<span style="color:#f87171;">Expired on: ${exp.toLocaleDateString()}</span>`;
+           }
+        } else {
+           document.getElementById("passExpiry").textContent = `No active pass`;
+        }
+
+        if (user.profileQr) {
+          document.getElementById("walletProfileQrImage").src = user.profileQr;
+        }
+
+        // Render Alerts
+        const alertContainer = document.getElementById("walletAlertContainer");
+        let alertsHtml = '';
+        
+        // Very Low Balance Alert
+        if (passBalance > 0 && passBalance <= 50) {
+            alertsHtml += `
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #b91c1c; padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 1.2rem;"></i>
+                <div>
+                    <strong>⚠️ Very Low Balance Alert</strong><br>
+                    <span style="font-size: 0.85rem;">Your Bus Wallet balance is only ₹${passBalance}. Recharge now to continue using BusFlux services without interruption.</span>
+                </div>
+            </div>`;
+        }
+
+        // Pass Expiry Reminder
+        if (user.monthlyPassExpiry) {
+            const exp = new Date(user.monthlyPassExpiry);
+            const now = new Date();
+            const daysLeft = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
+            
+            if (daysLeft > 0 && daysLeft <= 3) {
+                alertsHtml += `
+                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #b45309; padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-clock" style="font-size: 1.2rem;"></i>
+                    <div>
+                        <strong>📅 Pass Expiry Reminder</strong><br>
+                        <span style="font-size: 0.85rem;">Your BusFlux pass will expire in ${daysLeft} days. Current wallet balance: ₹${passBalance}. Renew your pass to continue uninterrupted travel.</span>
+                    </div>
+                </div>`;
+            }
+        }
+        
+        if (alertContainer) {
+            alertContainer.innerHTML = alertsHtml;
+        }
+
       } catch (e) {
         console.error("Failed to fetch wallet balance & QR:", e);
+        document.getElementById("walletBalance").textContent = `₹ 0`;
+        document.getElementById("passBalance").textContent = `₹ 0`;
       }
     }
 
@@ -541,21 +646,43 @@
       btn.classList.add('selected');
       selectedAmount = amount;
       document.getElementById('customAmount').value = '';
-      document.getElementById('rechargeBtnAmt').textContent = `₹${amount.toLocaleString('en-IN')}`;
-      document.getElementById('rechargeBtn').disabled = false;
+      
+      window.isPassPurchase = false;
+      const rBtn = document.getElementById('rechargeBtn');
+      rBtn.disabled = false;
+      rBtn.innerHTML = `<i class="fas fa-bolt"></i> Recharge Now · <span id="rechargeBtnAmt">₹${amount.toLocaleString('en-IN')}</span>`;
+    }
+
+    function buyMonthlyPass(amount, days) {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+      selectedAmount = amount;
+      document.getElementById('customAmount').value = amount;
+
+      window.isPassPurchase = true;
+      window.passPurchaseAmount = amount;
+      window.passPurchaseDays = days;
+
+      const btn = document.getElementById('rechargeBtn');
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fas fa-id-card-clip"></i> Buy Pass · <span id="rechargeBtnAmt">₹${amount.toLocaleString('en-IN')}</span>`;
+
+      // Scroll to the recharge section
+      btn.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
     // ── Custom input ──
     function handleCustomInput() {
       const val = parseInt(document.getElementById('customAmount').value);
+      const rBtn = document.getElementById('rechargeBtn');
+      window.isPassPurchase = false;
       if (isNaN(val) || val < 10) {
-        document.getElementById('rechargeBtnAmt').textContent = `Invalid Amount`;
-        document.getElementById('rechargeBtn').disabled = true;
+        rBtn.innerHTML = `<i class="fas fa-bolt"></i> Recharge Now · <span id="rechargeBtnAmt">Invalid Amount</span>`;
+        rBtn.disabled = true;
       } else {
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
         selectedAmount = val;
-        document.getElementById('rechargeBtnAmt').textContent = `₹${val.toLocaleString('en-IN')}`;
-        document.getElementById('rechargeBtn').disabled = false;
+        rBtn.innerHTML = `<i class="fas fa-bolt"></i> Recharge Now · <span id="rechargeBtnAmt">₹${val.toLocaleString('en-IN')}</span>`;
+        rBtn.disabled = false;
       }
     }
 
@@ -575,6 +702,31 @@
       // Intercept for Demo UPI Scanner
       if (selectedPaymentMethod === "upi") {
         document.getElementById('demoScannerAmt').innerText = `₹${selectedAmount.toLocaleString('en-IN')}`;
+        
+        const deepLinkBtn = document.getElementById('upiDeepLinkBtn');
+        const img = document.getElementById('demoScannerImage');
+        const baseUrl = window.basePaymentQrCode || "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=test@ybl&pn=BusFlux";
+        
+        if (baseUrl.includes("api.qrserver.com")) {
+            try {
+                const urlObj = new URL(baseUrl);
+                const dataParam = urlObj.searchParams.get("data"); // upi://pay?pa=...&pn=...
+                if (dataParam) {
+                    const newUpiString = dataParam + `&am=${selectedAmount}`;
+                    urlObj.searchParams.set("data", newUpiString);
+                    img.src = urlObj.toString();
+                    deepLinkBtn.href = newUpiString;
+                    deepLinkBtn.style.display = "inline-block";
+                }
+            } catch(e) {
+                console.error("Error formatting QR code URL", e);
+            }
+        } else {
+            // Static image uploaded by admin
+            img.src = baseUrl;
+            deepLinkBtn.style.display = "none";
+        }
+        
         document.getElementById('demoScannerModal').classList.add('open');
         return;
       }
@@ -603,8 +755,8 @@
           key: orderData.key,
           amount: orderData.amountPaise,
           currency: orderData.currency || "INR",
-          name: "BusFlux Wallet",
-          description: `Wallet Recharge - ₹${selectedAmount}`,
+          name: window.isPassPurchase ? "BusFlux Pass" : "BusFlux Wallet",
+          description: window.isPassPurchase ? `Pass Purchase - ₹${selectedAmount}` : `Wallet Recharge - ₹${selectedAmount}`,
           order_id: orderData.orderId,
           image: "https://img.icons8.com/fluency/96/bus.png",
           prefill: {
@@ -630,25 +782,51 @@
           },
           theme: { color: "#6366f1" },
           handler: async function(response) {
-            // Step 3: Verify payment & add balance
+            // Step 3: Verify payment & add balance (or buy pass)
             try {
-              const verifyRes = await fetch(`${WALLET_API}/payment/wallet-verify`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-                body: JSON.stringify({
+              let endpoint = `${WALLET_API}/payment/wallet-verify`;
+              let payload = {
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
                   amount: selectedAmount
-                })
+              };
+
+              if (window.isPassPurchase) {
+                  endpoint = `${WALLET_API}/payment/buy-monthly-pass`;
+                  payload = {
+                      amount: window.passPurchaseAmount,
+                      days: window.passPurchaseDays,
+                      method: "Razorpay (Pass)"
+                  };
+              }
+
+              const verifyRes = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify(payload)
               });
               const verifyData = await verifyRes.json();
 
               if (verifyRes.ok) {
-                showToast(`✅ ₹${selectedAmount} added to wallet successfully!`, "success");
-                loadWalletBalance();
-                loadTransactionHistory();
-                resetRechargeBtn();
+                  if (window.isPassPurchase && verifyData.carriedForward > 0) {
+                      const alertContainer = document.getElementById("walletAlertContainer");
+                      if (alertContainer) {
+                          alertContainer.innerHTML = `
+                          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #047857; padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
+                              <i class="fas fa-check-circle" style="font-size: 1.2rem;"></i>
+                              <div>
+                                  <strong>✅ Balance Carried Forward Successfully</strong><br>
+                                  <span style="font-size: 0.85rem;">₹${verifyData.carriedForward} from your previous pass has been added to your new pass. Current Wallet Balance: ₹${verifyData.newBalance}.</span>
+                              </div>
+                          </div>` + alertContainer.innerHTML;
+                      }
+                  } else {
+                      showToast(`✅ ₹${selectedAmount} ${window.isPassPurchase ? 'pass purchased' : 'added to wallet'} successfully!`, "success");
+                  }
+                  loadWalletBalance();
+                  loadTransactionHistory();
+                  resetRechargeBtn();
               } else {
                 showToast(verifyData.message || "Verification failed.", "error");
                 resetRechargeBtn();
@@ -691,7 +869,18 @@
     function resetRechargeBtn() {
       const btn = document.getElementById('rechargeBtn');
       btn.disabled = false;
-      btn.innerHTML = `<i class="fas fa-bolt"></i> Recharge Now · <span id="rechargeBtnAmt">₹${selectedAmount.toLocaleString('en-IN')}</span>`;
+      if (window.isPassPurchase) {
+          btn.innerHTML = `<i class="fas fa-id-card-clip"></i> Buy Pass · <span id="rechargeBtnAmt">₹${selectedAmount.toLocaleString('en-IN')}</span>`;
+      } else {
+          btn.innerHTML = `<i class="fas fa-bolt"></i> Recharge Now · <span id="rechargeBtnAmt">₹${selectedAmount.toLocaleString('en-IN')}</span>`;
+      }
+    }
+
+    function handleUpiClick(e) {
+      if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        e.preventDefault();
+        showToast("UPI Deep Links only work on mobile devices. Please click 'Simulate Successful Scan' on desktop.", "warning");
+      }
     }
 
     async function simulateDemoPayment() {
@@ -700,20 +889,49 @@
       btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
       
       try {
-        const verifyRes = await fetch(`${WALLET_API}/payment/wallet-verify`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({
+        let endpoint = `${WALLET_API}/payment/wallet-verify`;
+        let payload = {
             razorpay_order_id: "order_demo_" + Date.now(),
             razorpay_payment_id: "pay_demo_success",
             razorpay_signature: "demo_sig",
             amount: selectedAmount,
             method: "UPI (Demo)"
-          })
+        };
+        let amt = selectedAmount;
+
+        if (window.isPassPurchase) {
+            endpoint = `${WALLET_API}/payment/buy-monthly-pass`;
+            payload = {
+                amount: window.passPurchaseAmount,
+                days: window.passPurchaseDays,
+                method: "UPI (Demo Scanner)"
+            };
+            amt = window.passPurchaseAmount;
+        }
+
+        const verifyRes = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify(payload)
         });
         const verifyData = await verifyRes.json();
+        
         if (verifyRes.ok) {
-          showToast(`✅ ₹${selectedAmount} added via Demo Scanner!`, "success");
+          if (window.isPassPurchase && verifyData.carriedForward > 0) {
+              const alertContainer = document.getElementById("walletAlertContainer");
+              if (alertContainer) {
+                  alertContainer.innerHTML = `
+                  <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #047857; padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
+                      <i class="fas fa-check-circle" style="font-size: 1.2rem;"></i>
+                      <div>
+                          <strong>✅ Balance Carried Forward Successfully</strong><br>
+                          <span style="font-size: 0.85rem;">₹${verifyData.carriedForward} from your previous pass has been added to your new pass. Current Wallet Balance: ₹${verifyData.newBalance}.</span>
+                      </div>
+                  </div>` + alertContainer.innerHTML;
+              }
+          } else {
+              showToast(`✅ ₹${amt} ${window.isPassPurchase ? 'pass purchased' : 'added'} via Demo Scanner!`, "success");
+          }
           loadWalletBalance();
           loadTransactionHistory();
           document.getElementById('demoScannerModal').classList.remove('open');
@@ -724,6 +942,7 @@
         showToast("Network Error", "error");
       }
       btn.innerHTML = `Simulate Successful Scan`;
+      window.isPassPurchase = false;
     }
 
     // ── Load transaction history ──
@@ -812,8 +1031,6 @@
         renderTransactions(allTransactions);
       } else if (type === "recharge") {
         renderTransactions(allTransactions.filter(t => t.type === "recharge"));
-      } else if (type === "booking") {
-        renderTransactions(allTransactions.filter(t => t.type === "booking"));
       }
     }
 
@@ -826,8 +1043,12 @@
     });
   </script>
 <script src="ui-layout.js?v=4"></script>
+
 </body>
 </html>
+
+
+
 
 
 

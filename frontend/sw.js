@@ -1,4 +1,4 @@
-const CACHE_NAME = 'busflux-v2';
+const CACHE_NAME = 'busflux-v3';
 const ASSETS = [
   './',
   './index.html',

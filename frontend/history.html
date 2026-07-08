@@ -15,6 +15,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <link rel="stylesheet" href="layout.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -32,9 +33,7 @@
         <a href="buses.html" class="nav-item" id="sideNavBuses">
           <i class="fas fa-bus"></i> Buses
         </a>
-        <a href="bookings.html" class="nav-item" id="sideNavBookings">
-          <i class="fas fa-ticket"></i> My Bookings
-        </a>
+        
         <a href="wallet.html" class="nav-item" id="sideNavWallet">
           <i class="fas fa-wallet"></i> Wallet
         </a>
@@ -45,10 +44,8 @@
         <a href="#" class="nav-item" onclick="showOffersToast(); return false;">
           <i class="fas fa-tag"></i> Offers
         </a>
-        <a href="#" class="nav-item" onclick="scrollToStats(); return false;">
-          <i class="fas fa-location-dot"></i> Track Bus
-        </a>
-        <a href="#" class="nav-item" onclick="showHelpToast(); return false;">
+        <a href="buses.html" class="nav-item"><i class="fas fa-location-dot"></i> Track Bus</a>
+        <a href="help.html" class="nav-item">
           <i class="fas fa-circle-question"></i> Help Center
         </a>
       </nav>
@@ -86,12 +83,12 @@
 
   <div class="container container-wide">
     <h1>Transaction <span>History</span></h1>
-    <p class="subtitle">Your wallet recharges, tickets, and conductor deductions</p>
+    <p class="subtitle">Your wallet recharges and conductor deductions</p>
 
     <div class="tx-filters" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
       <button class="tx-filter-btn active" onclick="filterTransactions(this, 'all')" style="background: var(--primary-gradient); border: transparent; color: #ffffff; padding: 10px 18px; border-radius: 14px; font-size: .8rem; font-weight: 600; cursor: pointer;"><i class="fas fa-list"></i> All</button>
       <button class="tx-filter-btn" onclick="filterTransactions(this, 'recharge')" style="background: var(--bg); border: 1px solid var(--border); color: var(--text-medium); padding: 10px 18px; border-radius: 14px; font-size: .8rem; font-weight: 600; cursor: pointer;"><i class="fas fa-plus-circle"></i> Recharges</button>
-      <button class="tx-filter-btn" onclick="filterTransactions(this, 'booking')" style="background: var(--bg); border: 1px solid var(--border); color: var(--text-medium); padding: 10px 18px; border-radius: 14px; font-size: .8rem; font-weight: 600; cursor: pointer;"><i class="fas fa-ticket-alt"></i> Ticket Purchases</button>
+      <button class="tx-filter-btn" onclick="filterTransactions(this, 'booking')" style="background: var(--bg); border: 1px solid var(--border); color: var(--text-medium); padding: 10px 18px; border-radius: 14px; font-size: .8rem; font-weight: 600; cursor: pointer;"><i class="fas fa-bus"></i> Conductor Deductions</button>
     </div>
 
     <div id="transactionsList" style="display: flex; flex-direction: column; gap: 12px;">
@@ -157,7 +154,7 @@
         const amtColor = isRecharge ? "#10b981" : "#f43f5e";
         const iconHtml = isRecharge 
           ? `<div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0"><i class="fas fa-plus"></i></div>`
-          : `<div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(244, 63, 150, 0.15); color: #f43f5e; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0"><i class="fas fa-ticket"></i></div>`;
+          : `<div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(244, 63, 150, 0.15); color: #f43f5e; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0"><i class="fas fa-bus"></i></div>`;
         
         let detailsHtml = "";
         if (isRecharge) {
@@ -169,24 +166,29 @@
             </div>
           `;
         } else {
+          const conductorStr = t.conductorName ? ` · Conductor: ${t.conductorName}` : '';
           detailsHtml = `
-            <div style="flex: 1; min-width: 0; text-align: left;">
-              <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-dark);">Ticket Purchase</div>
-              <div style="font-size: 0.72rem; color: var(--text-medium); margin-top: 2px;">${t.busName || "Ride"} · Route: ${t.route}</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-dark);">Conductor Deduction</div>
+              <div style="font-size: 0.72rem; color: var(--text-medium); margin-top: 2px;">${t.busName || "Ride"} · Route: ${t.route}${conductorStr}</div>
               <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${date}</div>
             </div>
           `;
         }
         
         const totalVal = isRecharge ? (t.totalCredit || t.amount) : Math.abs(t.amount);
+        const downloadBtn = isRecharge 
+          ? `<button onclick="printRechargeReceipt('${t._id}', '${t.method || "Razorpay"}', '${date}', '${totalVal.toLocaleString('en-IN')}', '${t.bonus || 0}')" style="margin-top: 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; border-radius: 6px; padding: 4px 10px; font-size: 0.65rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"><i class="fas fa-download" style="margin-right: 4px;"></i> DOWNLOAD RECEIPT</button>`
+          : `<button onclick="printTicket('${t.ticketId}', '${t.busName || "Ride"}', '${t.route}', '${t.conductorName || "N/A"}', '${date}', '${totalVal.toLocaleString('en-IN')}')" style="margin-top: 8px; background: rgba(108, 99, 255, 0.1); border: 1px solid rgba(108, 99, 255, 0.3); color: var(--primary); border-radius: 6px; padding: 4px 10px; font-size: 0.65rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"><i class="fas fa-download" style="margin-right: 4px;"></i> DOWNLOAD RECEIPT</button>`;
         
         return `
           <div style="display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 10px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(108,63,214,0.05);">
             ${iconHtml}
             ${detailsHtml}
-            <div style="text-align: right; flex-shrink: 0;">
+            <div style="text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end;">
               <div style="font-size: 1.1rem; font-weight: 800; color: ${amtColor};">${amtSign}₹${totalVal.toLocaleString('en-IN')}</div>
               <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px;">${t.status || "Completed"}</div>
+              ${downloadBtn}
             </div>
           </div>
         `;
@@ -215,10 +217,127 @@
       }
     }
 
+    function printRechargeReceipt(txnId, method, date, amount, bonus) {
+      const htmlContent = `
+        <div style="width: 500px; padding: 40px 0; background: #ffffff;">
+          <div style="font-family: 'Inter', sans-serif; width: 320px; margin: 0 auto; padding: 20px; background: #fff; color: #1e293b; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+            <div style="background: linear-gradient(135deg, #10b981, #34d399); color: white; padding: 24px 20px; text-align: center; border-radius: 12px 12px 0 0;">
+              <h2 style="margin: 0 0 5px 0; font-size: 1.4rem; letter-spacing: 1px;">BUSFLUX</h2>
+              <p style="margin: 0; opacity: 0.9; font-size: 0.85rem;">Recharge Receipt</p>
+            </div>
+          <div style="padding: 24px 20px;">
+            <div style="font-size: 1.6rem; color: #10b981; font-weight: 800; text-align: center; margin: 10px 0;">₹${amount}</div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;">
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Date & Time</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: #0f172a;">${date}</div>
+              </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;">
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Payment Method</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: #0f172a;">${method}</div>
+              </div>
+            </div>
+            
+            ${bonus > 0 ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;">
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Bonus Applied</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: #10b981;">+₹${bonus}</div>
+              </div>
+            </div>
+            ` : ''}
+
+            <div style="text-align: center; margin-top: 10px;">
+              <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">Transaction ID</div>
+              <div style="font-size: 0.9rem; font-weight: 700; color: #0f172a; font-family: monospace; letter-spacing: 2px; background: #f1f5f9; padding: 8px; border-radius: 6px;">${txnId}</div>
+            </div>
+          </div>
+        </div>
+        </div>
+      `;
+      
+      const opt = {
+        margin:       10,
+        filename:     `Recharge-${txnId}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
+      };
+      
+      html2pdf().set(opt).from(htmlContent).save();
+    }
+
+    function printTicket(ticketId, busName, route, conductorName, date, amount) {
+      const htmlContent = `
+        <div style="width: 500px; padding: 40px 0; background: #ffffff;">
+          <div style="font-family: 'Inter', sans-serif; width: 320px; margin: 0 auto; padding: 20px; background: #fff; color: #1e293b; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+            <div style="background: linear-gradient(135deg, #6c3fd6, #8b5cf6); color: white; padding: 24px 20px; text-align: center; border-radius: 12px 12px 0 0;">
+              <h2 style="margin: 0 0 5px 0; font-size: 1.4rem; letter-spacing: 1px;">BUSFLUX</h2>
+              <p style="margin: 0; opacity: 0.9; font-size: 0.85rem;">Boarding Pass</p>
+            </div>
+          <div style="padding: 24px 20px;">
+            <div style="font-size: 1.6rem; color: #10b981; font-weight: 800; text-align: center; margin: 10px 0;">₹${amount}</div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;">
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Date & Time</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: #0f172a;">${date}</div>
+              </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;">
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Route</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: #0f172a;">${route}</div>
+              </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;">
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Bus</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: #0f172a;">${busName}</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;">
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Conductor</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: #0f172a;">${conductorName}</div>
+              </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 10px;">
+              <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">Ticket ID</div>
+              <div style="font-size: 0.9rem; font-weight: 700; color: #0f172a; font-family: monospace; letter-spacing: 2px; background: #f1f5f9; padding: 8px; border-radius: 6px;">${ticketId}</div>
+            </div>
+          </div>
+        </div>
+        </div>
+      `;
+      
+      const opt = {
+        margin:       10,
+        filename:     `Ticket-${ticketId}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
+      };
+      
+      html2pdf().set(opt).from(htmlContent).save();
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       window.renderTransactionHistory = loadTransactionHistory;
       loadTransactionHistory();
     });
   </script>
+
 </body>
 </html>
+
+
+

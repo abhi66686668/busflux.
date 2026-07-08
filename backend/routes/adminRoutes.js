@@ -3,6 +3,7 @@ const router  = express.Router();
 const User    = require("../models/User");
 const Bus     = require("../models/Bus");
 const Booking = require("../models/Booking");
+const OwnerTransaction = require("../models/OwnerTransaction");
 const jwt     = require("jsonwebtoken");
 const bcrypt  = require("bcryptjs");
 
@@ -48,6 +49,10 @@ router.get("/stats", adminAuth, async (req, res) => {
     // Revenue
     const bookings = await Booking.find({ status: { $ne: "failed" } });
     const totalRevenue = bookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    
+    // Total Admin Profit (Commission)
+    const transactions = await OwnerTransaction.find({ status: "Settled" });
+    const totalAdminProfit = transactions.reduce((sum, tx) => sum + (tx.commissionAmount || 0), 0);
 
     // Users by age group
     const ageGroups = await User.aggregate([
@@ -56,9 +61,21 @@ router.get("/stats", adminAuth, async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    res.status(200).json({ totalUsers, totalBuses, totalBookings, activeBuses, totalRevenue, ageGroups, totalConductors });
+    res.status(200).json({ totalUsers, totalBuses, totalBookings, activeBuses, totalRevenue, totalAdminProfit, ageGroups, totalConductors });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// ================= GET PLATFORM PROFIT HISTORY =================
+router.get("/profit-history", adminAuth, async (req, res) => {
+  try {
+    const history = await OwnerTransaction.find({ status: "Settled" })
+      .populate('busId', 'name busNumber')
+      .sort({ updatedAt: -1 });
+    res.status(200).json({ success: true, data: history });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -256,6 +273,32 @@ router.put("/notifications/read", adminAuth, async (req, res) => {
     res.status(200).json({ message: "Notifications marked as read" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// ================= REMIND CONDUCTOR TO ADD BANK DETAILS =================
+router.post("/remind-bank-details/:conductorId", adminAuth, async (req, res) => {
+  try {
+    const { conductorId } = req.params;
+    
+    const notifData = {
+      title: "Bank Details Missing",
+      message: "Please update your Payout/Bank Details in your Profile immediately so your settlement can be processed.",
+      type: "warning",
+      targetRole: "conductor",
+      targetUser: conductorId
+    };
+    
+    await Notification.create(notifData);
+    
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('new_notification', notifData);
+    }
+    
+    res.status(200).json({ success: true, message: "Reminder sent to conductor." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

@@ -119,6 +119,24 @@ async function updateNavbar() {
           // Fetch notifications after rendering nav
           fetchUserNotifications();
           
+          // Home page alerts
+          if (page === 'index.html' || page === '') {
+            const homeAlertContainer = document.getElementById("homeAlertContainer");
+            if (homeAlertContainer) {
+              const passBalance = user.monthlyPassBalance || 0;
+              if (passBalance > 0 && passBalance <= 50) {
+                homeAlertContainer.innerHTML = `
+                  <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 12px; padding: 15px; margin-bottom: 20px; color: #b91c1c; display: flex; align-items: flex-start; gap: 12px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 1.2rem; margin-top: 2px;"></i>
+                    <div>
+                      <strong style="font-size: 1rem;">⚠️ Very Low Balance Alert</strong><br>
+                      <span style="font-size: 0.85rem;">Your Bus Wallet balance is only ₹${passBalance}. <a href="wallet.html" style="color: #b91c1c; text-decoration: underline; font-weight: bold;">Recharge now</a> to continue using BusFlux services without interruption.</span>
+                    </div>
+                  </div>`;
+              }
+            }
+          }
+
           // Initialize WebSocket connection
           if (user && user._id) {
             initUserWebSocket(user._id);
@@ -700,7 +718,9 @@ if (busList) {
 
               <div class="bus-footer">
                 <span class="bus-footer-info"><i class="fas fa-ticket-alt"></i> Online Booking Available</span>
-                <button class="book-now-btn" onclick="openBookingModal('${bus._id}')">Book Seat</button>
+                <div>
+                  <button class="book-now-btn" style="background:var(--success);" onclick="openTrackingModal('${bus._id}', '${bus.busName}')"><i class="fas fa-location-dot"></i> Track</button>
+                </div>
               </div>
             </div>
           </div>
@@ -725,7 +745,8 @@ let _currentBusData = null;
 let _priceDebounce  = null;
 
 async function openBookingModal(busId) {
-  const token = localStorage.getItem("token");
+  setPersistedState({ type: 'booking', busId });
+  const token = localStorage.getItem('token');
   if (!token) {
     showToast("Please login first to book a ticket.", "warning");
     setTimeout(() => { window.location.href = "login.html"; }, 1500);
@@ -780,6 +801,7 @@ async function openBookingModal(busId) {
 }
 
 function closeBookingModal() {
+  clearPersistedState();
   document.getElementById("bookingModal").classList.remove("open");
   _currentBusId   = null;
   _currentBusData = null;
@@ -831,8 +853,13 @@ async function updatePrice() {
     const dIdx = allStops.indexOf(dropping);
 
     const warnEl = document.getElementById("bkWarning");
-    if (dIdx <= bIdx) {
-      document.getElementById("bkWarningText").textContent = "Dropping point must be after the boarding point.";
+
+    function getNormalizedStop(name) {
+      return name.toLowerCase().replace(/[^a-z]/g, '').replace(/[aeiou]/g, '');
+    }
+
+    if (dIdx <= bIdx || getNormalizedStop(boarding) === getNormalizedStop(dropping)) {
+      document.getElementById("bkWarningText").textContent = "Invalid route or stops appear to be the same.";
       warnEl.style.display = "block";
       document.getElementById("bkConfirmBtn").disabled = true;
       return;
@@ -865,6 +892,19 @@ async function confirmBooking() {
   const boarding = document.getElementById("bkBoarding").value;
   const dropping = document.getElementById("bkDropping").value;
   const seats    = 1;
+
+  function getNormalizedStop(name) {
+    return name.toLowerCase().replace(/[^a-z]/g, '').replace(/[aeiou]/g, '');
+  }
+
+  const allStops = [_currentBusData.from, ...(_currentBusData.stops || []), _currentBusData.to];
+  const bIdx = allStops.indexOf(boarding);
+  const dIdx = allStops.indexOf(dropping);
+
+  if (dIdx <= bIdx || getNormalizedStop(boarding) === getNormalizedStop(dropping)) {
+    alert("Invalid route or stops appear to be the same.");
+    return;
+  }
   const payMethod = document.querySelector('input[name="payMethod"]:checked')?.value || 'razorpay';
 
   const btn = document.getElementById("bkConfirmBtn");
@@ -1068,9 +1108,7 @@ if (bookingList) {
           <div class="empty-state">
             <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
             <p>You have not booked any boarding passes yet.</p>
-            <a href="buses.html" style="text-decoration: none; display: inline-block; margin-top: 10px;">
-              <button style="width: auto; padding: 10px 20px;"><i class="fas fa-search"></i> Search Buses</button>
-            </a>
+            <button onclick="window.location.href='buses.html'" style="width: auto; padding: 10px 20px; margin-top: 10px; cursor: pointer;"><i class="fas fa-search"></i> Search Buses</button>
           </div>
         `;
         return;
@@ -1100,7 +1138,10 @@ if (bookingList) {
             <div class="ticket-footer" style="display:flex; flex-direction:column; align-items:center; padding: 20px;">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ticketIdSuffix}&color=000000&bgcolor=ffffff" alt="Ticket QR Code" style="width: 120px; height: 120px; border: 6px solid #fff; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
               <div class="ticket-number" style="margin-bottom: 15px;">TICKET #${ticketIdSuffix}</div>
-              <button onclick="downloadQR('${ticketIdSuffix}')" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;"><i class="fas fa-download"></i> Download QR</button>
+              <div style="display: flex; gap: 10px; width: 100%; justify-content: center;">
+                <button onclick="downloadQR('${ticketIdSuffix}')" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fas fa-download"></i> Download QR</button>
+                <button onclick="openTrackingModal('${booking.busId ? booking.busId._id : ''}', '${busName}', '${fromLoc}', '${toLoc}', true)" style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fas fa-location-dot"></i> Track Live</button>
+              </div>
             </div>
         `;
 
@@ -1766,35 +1807,13 @@ window.showOffersToast = function() {
         
         <div style="display:flex; flex-direction:column; gap:16px;">
           <!-- Offer 1 -->
-          <div style="background:${isDark ? 'rgba(34, 197, 94, 0.1)' : '#f0fdf4'}; border:1px dashed #22c55e; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px;">
-            <div style="background:#22c55e; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
-              <i class="fas fa-percent"></i>
-            </div>
-            <div style="flex:1;">
-              <h4 style="color:${isDark ? '#4ade80' : '#166534'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">First Ride Free</h4>
-              <p style="color:${isDark ? '#86efac' : '#15803d'}; margin:0; font-size:0.85rem; line-height:1.4;">Get 100% off (up to ₹50) on your very first BusFlux booking.</p>
-            </div>
-          </div>
-          
-          <!-- Offer 2 -->
           <div style="background:${isDark ? 'rgba(245, 158, 11, 0.1)' : '#fffbeb'}; border:1px dashed #f59e0b; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px;">
             <div style="background:#f59e0b; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
               <i class="fas fa-wallet"></i>
             </div>
             <div style="flex:1;">
               <h4 style="color:${isDark ? '#fbbf24' : '#b45309'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">Cashback Fiesta</h4>
-              <p style="color:${isDark ? '#fcd34d' : '#b45309'}; margin:0; font-size:0.85rem; line-height:1.4;">Recharge wallet with ₹500+ and get a flat ₹50 instant cashback.</p>
-            </div>
-          </div>
-
-          <!-- Offer 3 -->
-          <div style="background:${isDark ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff'}; border:1px dashed #3b82f6; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px;">
-            <div style="background:#3b82f6; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
-              <i class="fas fa-route"></i>
-            </div>
-            <div style="flex:1;">
-              <h4 style="color:${isDark ? '#60a5fa' : '#1d4ed8'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">Weekend Getaway</h4>
-              <p style="color:${isDark ? '#93c5fd' : '#1e40af'}; margin:0; font-size:0.85rem; line-height:1.4;">20% discount on all weekend rides starting from State Bank terminal.</p>
+              <p style="color:${isDark ? '#fcd34d' : '#b45309'}; margin:0; font-size:0.85rem; line-height:1.4;">First recharge will get ₹100 cash back!</p>
             </div>
           </div>
         </div>
@@ -1823,3 +1842,725 @@ window.closeOffersModal = function() {
     setTimeout(() => modal.remove(), 300);
   }
 };
+// State Management for Page Refreshes
+function setPersistedState(state) {
+  sessionStorage.setItem('busfluxAppState', JSON.stringify(state));
+}
+function clearPersistedState() {
+  sessionStorage.removeItem('busfluxAppState');
+}
+
+// Wait for DOM to load map
+document.addEventListener('DOMContentLoaded', () => {
+  // We can't initialize the map until the modal is opened, so we do it in openTrackingModal
+  
+  // Restore previous state if user refreshed the page
+  const stateStr = sessionStorage.getItem('busfluxAppState');
+  if (stateStr) {
+    try {
+      const state = JSON.parse(stateStr);
+      if (state.type === 'tracking') {
+        // slight delay to let other DOM setup finish
+        setTimeout(() => openTrackingModal(state.busId, state.busName, state.userBoardingStop, state.userDroppingStop, state.isLocked), 300);
+      } else if (state.type === 'booking') {
+        setTimeout(() => openBookingModal(state.busId), 300);
+      }
+    } catch(e) {
+      console.error('Failed to restore state', e);
+    }
+  }
+});
+
+// ================= LIVE TRACKING MODAL =================
+let trackingMap = null;
+let busMarker = null;
+let trackingSocket = null;
+let isFollowing = true;
+let nextStopCoords = null;
+let lastNextStopName = null;
+let nextStopETAString = "";
+
+async function openTrackingModal(busId, busName, userBoardingStop, userDroppingStop, isLocked = false) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    showToast("Please login first to track a bus.", "warning");
+    return;
+  }
+
+  setPersistedState({ type: 'tracking', busId, busName, userBoardingStop, userDroppingStop, isLocked });
+  document.getElementById("trackingModal").classList.add("open");
+  document.getElementById("trackBusName").textContent = busName || "Live Bus Tracking";
+  
+
+  
+  if (!trackingMap) {
+    trackingMap = L.map('trackingMap').setView([12.9141, 74.8560], 12); // Default Mangalore
+    
+    const normalLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google Maps'
+    });
+
+    const satelliteLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google Maps'
+    });
+
+    normalLayer.addTo(trackingMap);
+
+    const baseMaps = {
+      "Normal": normalLayer,
+      "Satellite": satelliteLayer
+    };
+
+    L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(trackingMap);
+
+    // Fullscreen Toggle Control (Previous Method)
+    var FullScreenControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function(map) {
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        container.innerHTML = `<a href="#" title="Toggle Full Screen" style="font-size: 16px; font-weight: bold; color: #333; text-decoration: none; text-align: center; line-height: 30px; display: block; background: #fff; width: 40px; height: 30px;"><i class="fas fa-expand"></i></a>`;
+        container.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var trackingModal = document.getElementById('trackingModal');
+          trackingModal.classList.toggle('full-screen');
+          
+          setTimeout(() => trackingMap.invalidateSize(), 300);
+        };
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+        return container;
+      }
+    });
+    trackingMap.addControl(new FullScreenControl());
+
+    // Follow Bus Toggle Control
+    var FollowControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function(map) {
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        container.innerHTML = `<a href="#" id="followBtn" title="Follow Bus" style="font-size: 16px; color: #10b981; text-decoration: none; text-align: center; line-height: 30px; display: block; background: #fff; width: 40px; height: 30px;"><i class="fas fa-location-arrow"></i></a>`;
+        container.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          isFollowing = !isFollowing;
+          const btn = document.getElementById('followBtn');
+          if (isFollowing) {
+            btn.style.color = '#10b981'; // Green when following
+            if (busMarker) trackingMap.setView(busMarker.getLatLng(), trackingMap.getZoom());
+          } else {
+            btn.style.color = '#64748b'; // Gray when not following
+          }
+        };
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+        return container;
+      }
+    });
+    trackingMap.addControl(new FollowControl());
+
+
+
+  }
+  
+  // Need to invalidateSize since it was hidden
+  setTimeout(() => {
+    trackingMap.invalidateSize();
+  }, 300);
+  
+  if (busMarker) {
+    trackingMap.removeLayer(busMarker);
+    busMarker = null;
+  }
+  
+  document.getElementById("marqueeContainer").style.display = "none";
+  document.getElementById("marqueeText").textContent = "NEXT STOP: ---";
+  
+  // Init Socket
+  if (!trackingSocket) {
+    trackingSocket = io(API_BASE_URL.replace('/api', ''));
+  }
+  
+  trackingSocket.emit('join_bus_room', busId);
+  
+  // Clear any existing stop markers from a previous tracked bus
+  if (trackingMap.stopMarkers && trackingMap.stopMarkers.length > 0) {
+      trackingMap.stopMarkers.forEach(marker => trackingMap.removeLayer(marker));
+  }
+  
+  // Fetch bus to populate personal ETA dropdowns
+  fetch(`${API_BASE_URL}/buses`)
+    .then(res => res.json())
+    .then(buses => {
+       const bus = buses.find(b => b._id === busId);
+       if (bus) {
+           let allStops = [bus.from, ...(bus.stops || []), bus.to];
+           const bSelect = document.getElementById("myBoardingStop");
+           const dSelect = document.getElementById("myDropoffStop");
+           if (bSelect && dSelect) {
+               const opts = `<option value="">-- Select --</option>` + allStops.map(s => {
+                   let name = s.replace(/^NEXT STOP:\s*/i, "").trim();
+                   return `<option value="${name}">${name}</option>`;
+               }).join("");
+               bSelect.innerHTML = opts;
+               dSelect.innerHTML = opts;
+
+               // Pre-select and lock if provided
+               if (userBoardingStop) {
+                   const match = Array.from(bSelect.options).find(opt => opt.value.toLowerCase() === userBoardingStop.toLowerCase());
+                   if (match) bSelect.value = match.value;
+               }
+               if (userDroppingStop) {
+                   const match = Array.from(dSelect.options).find(opt => opt.value.toLowerCase() === userDroppingStop.toLowerCase());
+                   if (match) dSelect.value = match.value;
+               }
+
+               if (isLocked) {
+                   bSelect.disabled = true;
+                   dSelect.disabled = true;
+                   bSelect.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                   dSelect.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                   bSelect.style.cursor = 'not-allowed';
+                   dSelect.style.cursor = 'not-allowed';
+               } else {
+                   bSelect.disabled = false;
+                   dSelect.disabled = false;
+                   bSelect.style.backgroundColor = '';
+                   dSelect.style.backgroundColor = '';
+                   bSelect.style.cursor = '';
+                   dSelect.style.cursor = '';
+               }
+           }
+       }
+    }).catch(err => console.error("Failed to fetch bus for ETA dropdowns:", err));
+
+  // Init tracking data object
+  window._currentTrackingData = {
+    routeCoords: null,
+    currentLat: null,
+    currentLng: null,
+    effectiveSpeed: 35,
+    stopCoordinates: {
+        "thaudugoli": [74.8967, 12.8021],
+        "montepadavu": [74.9264, 12.7949],
+        "kallukatta": [74.9019, 12.7924],
+        "konaje": [74.9021, 12.8162],
+        "mangalore university": [74.9244, 12.8160],
+        "belaringe": [74.8900, 12.7850],
+        "meempri": [74.8950, 12.7900],
+        "natekal": [74.9037, 12.8020],
+        "kannachur": [74.8989, 12.8051],
+        "k.s. hegde hospital": [74.8906, 12.8094],
+        "deralakatte": [74.8940, 12.8088],
+        "kuthar": [74.8760, 12.8195],
+        "kuthar junction": [74.8760, 12.8195],
+        "babbukatte": [74.8659, 12.8185],
+        "thokkottu": [74.860673, 12.818348],
+        "mugeru": [74.867158, 12.859398],
+        "nagori": [74.8745, 12.8700],
+        "pumpwell": [74.8640, 12.8688],
+        "kankanady": [74.8600, 12.8646],
+        "balmatta": [74.8470, 12.8711],
+        "jyothi": [74.8491, 12.8711],
+        "jyothi circle": [74.8491, 12.8711],
+        "hampankatta": [74.8434, 12.8691],
+        "state bank": [74.8365, 12.8627],
+        "mangalore": [74.8365, 12.8627]
+    }
+  };
+
+  window.updatePersonalETA = function() {
+      const boarding = document.getElementById("myBoardingStop")?.value;
+      const dropoff = document.getElementById("myDropoffStop")?.value;
+      const etaDisplay = document.getElementById("personalEtaDisplay");
+      
+      if (!etaDisplay || !window._currentTrackingData.routeCoords || !boarding) {
+          if(etaDisplay) etaDisplay.style.display = 'none';
+          return;
+      }
+      
+      const d = window._currentTrackingData;
+      const route = d.routeCoords; // Array of [lon, lat]
+      
+      const getClosestIdx = (lon, lat) => {
+          let minDist = Infinity;
+          let idx = 0;
+          for(let i=0; i<route.length; i++) {
+              const dist = (route[i][0]-lon)**2 + (route[i][1]-lat)**2;
+              if(dist < minDist) { minDist = dist; idx = i; }
+          }
+          return idx;
+      };
+      
+      const getDistBetween = (idx1, idx2) => {
+          if (idx1 >= idx2) return 0;
+          let dist = 0;
+          for(let i=idx1; i<idx2; i++) {
+              dist += getDistanceFromLatLonInKm(route[i][1], route[i][0], route[i+1][1], route[i+1][0]);
+          }
+          return dist;
+      };
+      
+      const bCoord = d.stopCoordinates[boarding.toLowerCase()];
+      const dpCoord = dropoff ? d.stopCoordinates[dropoff.toLowerCase()] : null;
+      
+      if (!bCoord) return;
+      
+      const busIdx = getClosestIdx(d.currentLng, d.currentLat);
+      const boardingIdx = getClosestIdx(bCoord[0], bCoord[1]);
+      
+      let text = "";
+      if (busIdx >= boardingIdx - 2) { 
+          text = `Boarding: Passed`;
+      } else {
+          const distToBoarding = getDistBetween(busIdx, boardingIdx);
+          const etaB = Math.max(1, Math.round((distToBoarding / d.effectiveSpeed) * 60));
+          text = `Boarding ETA: ${etaB} min`;
+      }
+      
+      if (dpCoord) {
+          const dropIdx = getClosestIdx(dpCoord[0], dpCoord[1]);
+          if (busIdx >= dropIdx - 2) {
+              text += ` | Drop: Passed`;
+          } else {
+              const distToDrop = getDistBetween(busIdx, dropIdx);
+              const etaD = Math.max(1, Math.round((distToDrop / d.effectiveSpeed) * 60));
+              text += ` | Drop ETA: ${etaD} min`;
+          }
+      }
+      
+      etaDisplay.style.display = 'block';
+      etaDisplay.textContent = text;
+  };
+
+  // Removed red dot logic per user request
+
+  let routeLine = null;
+  let lastLat = null;
+  let lastLng = null;
+  let lastTime = null;
+  let trackingRouteCoords = null;
+  let speedBuffer = [];
+  
+  function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+    return R * c; // Distance in km
+  }
+
+  trackingSocket.off('bus_location_update'); // Prevent multiple listeners
+  trackingSocket.on('bus_location_update', (data) => {
+    if (data.busId === busId) {
+      
+      // Draw the route line if the conductor emits the OSRM route
+      if (data.routeCoordinates) {
+        trackingRouteCoords = data.routeCoordinates;
+      }
+
+      if (data.lat && data.lng) {
+        if (!busMarker) {
+          const busIcon = L.divIcon({
+            html: '<i class="fas fa-bus" style="color:#10b981; font-size:24px; filter: drop-shadow(0 0 8px rgba(16,185,129,0.8)); background: #0d1326; border-radius: 50%; padding: 4px; border: 2px solid #10b981;"></i>',
+            className: 'custom-bus-icon',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+          });
+          busMarker = L.marker([data.lat, data.lng], {icon: busIcon}).addTo(trackingMap);
+          if (!routeLine || isFollowing) trackingMap.setView([data.lat, data.lng], 15);
+        } else {
+          busMarker.setLatLng([data.lat, data.lng]);
+          if (isFollowing) {
+             trackingMap.setView([data.lat, data.lng], trackingMap.getZoom());
+          }
+        }
+        
+        // Show Dashboard
+        document.getElementById('trackingDashboard').style.display = 'flex';
+        
+        // Metrics Calculation
+        const now = Date.now();
+        let currentSpeed = 0;
+        
+        if (lastLat !== null && lastTime !== null) {
+          const timeDiffHrs = (now - lastTime) / (1000 * 60 * 60);
+          if (timeDiffHrs > 0 && timeDiffHrs < 1) { // Ignore huge gaps
+             const d = getDistanceFromLatLonInKm(lastLat, lastLng, data.lat, data.lng);
+             let instSpeed = d / timeDiffHrs;
+             
+             // The simulation moves too fast, resulting in unrealistic 100+ km/h speeds.
+             // We normalize the speed to realistic bus values (30-65 km/h) based on the distance tick.
+             if (instSpeed > 65) {
+                instSpeed = 40 + (d * 1000) % 20; 
+             }
+             if (instSpeed > 75) instSpeed = 75; // Hard cap just in case
+             
+             speedBuffer.push(instSpeed);
+             if (speedBuffer.length > 4) speedBuffer.shift();
+             
+             currentSpeed = speedBuffer.reduce((a, b) => a + b, 0) / speedBuffer.length;
+          }
+        }
+        
+        lastLat = data.lat;
+        lastLng = data.lng;
+        lastTime = now;
+        
+        // Update Speedometer UI
+        document.getElementById("dashSpeed").textContent = currentSpeed.toFixed(1);
+        const speedRatio = Math.min(currentSpeed / 120, 1);
+        document.getElementById("speedGaugeFill").style.strokeDashoffset = 125.6 * (1 - speedRatio);
+        const needleRot = -90 + (speedRatio * 180);
+        document.getElementById("speedNeedle").style.transform = `translateX(-50%) rotate(${needleRot}deg)`;
+        
+        // Calculate Remaining Distance
+        let remainingDist = 0;
+        if (trackingRouteCoords && trackingRouteCoords.length > 0) {
+            let minDist = Infinity;
+            let closestIdx = 0;
+            for (let i = 0; i < trackingRouteCoords.length; i++) {
+                const c = trackingRouteCoords[i];
+                const distSq = (c[1] - data.lat)**2 + (c[0] - data.lng)**2;
+                if (distSq < minDist) {
+                    minDist = distSq;
+                    closestIdx = i;
+                }
+            }
+            for (let i = closestIdx; i < trackingRouteCoords.length - 1; i++) {
+                const c1 = trackingRouteCoords[i];
+                const c2 = trackingRouteCoords[i+1];
+                remainingDist += getDistanceFromLatLonInKm(c1[1], c1[0], c2[1], c2[0]);
+            }
+            
+            // Draw only the remaining route so it doesn't show the past path
+            const remainingCoords = trackingRouteCoords.slice(closestIdx);
+            const latLngs = remainingCoords.map(coord => [coord[1], coord[0]]);
+            if (!routeLine && latLngs.length > 0) {
+                routeLine = L.polyline(latLngs, {color: '#3b82f6', weight: 6, opacity: 0.8}).addTo(trackingMap);
+                trackingMap.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+            } else if (routeLine && latLngs.length > 0) {
+                routeLine.setLatLngs(latLngs);
+            }
+        }
+        
+        document.getElementById("dashDistance").textContent = remainingDist > 0 ? remainingDist.toFixed(1) + " km" : "0.0 km";
+        
+        // Update ETA
+        let effectiveSpeedForETA = 35; // Default average city speed (km/h)
+        if (currentSpeed > 5) {
+            // Blend current speed with average for a stable and realistic ETA
+            effectiveSpeedForETA = (currentSpeed * 0.4) + (35 * 0.6); 
+        }
+        
+        
+          window._currentTrackingData.routeCoords = trackingRouteCoords;
+          window._currentTrackingData.currentLat = data.lat;
+          window._currentTrackingData.currentLng = data.lng;
+          window._currentTrackingData.effectiveSpeed = effectiveSpeedForETA;
+          if (window.updatePersonalETA) window.updatePersonalETA();
+
+          if (remainingDist > 0.1) {
+
+            const etaHrs = remainingDist / effectiveSpeedForETA;
+            const etaMins = Math.max(1, Math.round(etaHrs * 60));
+            document.getElementById("dashETA").textContent = etaMins + " min";
+        } else if (remainingDist <= 0.1) {
+            document.getElementById("dashETA").textContent = "Arrived";
+        } else {
+            document.getElementById("dashETA").textContent = "--";
+        }
+        
+        // Last Update Time
+        const updateDate = new Date();
+        const dateString = updateDate.toLocaleDateString('en-GB').replace(/\//g, '-');
+        const timeString = updateDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        document.getElementById("dashLastUpdate").textContent = `Last update time ${dateString} ${timeString}`;
+      }
+      
+      if (data.nextStop) {
+        document.getElementById("marqueeContainer").style.display = "flex";
+        const marqueeEl = document.getElementById("marqueeText");
+        
+        if (data.nextStop.toUpperCase().startsWith("ARRIVED") || data.nextStop.toUpperCase().startsWith("STOPPED")) {
+          marqueeEl.textContent = data.nextStop.toUpperCase();
+          marqueeEl.style.color = "#10b981"; // green for arrived
+          
+          nextStopCoords = null;
+          lastNextStopName = data.nextStop;
+          nextStopETAString = "";
+          
+          // Force Speed to 0 when arrived
+          speedBuffer = [0, 0, 0, 0, 0];
+          const dashSpeed = document.getElementById("dashSpeed");
+          if (dashSpeed) dashSpeed.textContent = "0.0";
+          const speedGaugeFill = document.getElementById("speedGaugeFill");
+          if (speedGaugeFill) speedGaugeFill.style.strokeDashoffset = 125.6;
+          const speedNeedle = document.getElementById("speedNeedle");
+          if (speedNeedle) speedNeedle.style.transform = `translateX(-50%) rotate(-90deg)`;
+          
+        } else {
+          // If the stop name changed, fetch new coordinates
+          if (data.nextStop !== lastNextStopName) {
+            lastNextStopName = data.nextStop;
+            nextStopCoords = null;
+            nextStopETAString = "";
+            
+            // Only try to geocode if it's a normal stop name (ignoring simple 'NEXT STOP:' if passed)
+            let queryStr = data.nextStop.replace(/^NEXT STOP:\s*/i, "").trim();
+            
+            fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryStr + ", Mangalore")}&format=json&limit=1`)
+              .then(res => res.json())
+              .then(results => {
+                 if (results && results.length > 0) {
+                     nextStopCoords = {
+                         lat: parseFloat(results[0].lat),
+                         lng: parseFloat(results[0].lon)
+                     };
+                 }
+              })
+              .catch(err => console.error("Geocoding failed:", err));
+          }
+          
+          // Calculate ETA if we have coords, valid speed, and bus location
+          if (nextStopCoords && data.lat && data.lng) {
+             const distToStop = getDistanceFromLatLonInKm(data.lat, data.lng, nextStopCoords.lat, nextStopCoords.lng);
+             
+             let speedToUse = typeof currentSpeed !== 'undefined' ? currentSpeed : 0;
+             let effectiveSpeedForETA = 35; // Default average city speed
+             if (speedToUse > 5) {
+                 effectiveSpeedForETA = (speedToUse * 0.4) + (35 * 0.6);
+             }
+             
+             if (distToStop > 0.1) {
+                 const etaHrs = distToStop / effectiveSpeedForETA;
+                 const etaMins = Math.max(1, Math.round(etaHrs * 60));
+                 nextStopETAString = ` (ETA: ${etaMins} min)`;
+             } else if (distToStop <= 0.1) {
+                 nextStopETAString = ` (ARRIVING)`;
+             } else {
+                 nextStopETAString = "";
+             }
+          }
+          
+          marqueeEl.textContent = data.nextStop.toUpperCase() + nextStopETAString;
+          marqueeEl.style.color = "#ef4444"; // red for moving
+        }
+      }
+    }
+  });
+}
+
+function closeTrackingModal() {
+  clearPersistedState();
+  const modal = document.getElementById("trackingModal");
+  modal.classList.remove("open");
+  modal.classList.remove("full-screen");
+  if (trackingSocket) {
+    trackingSocket.disconnect();
+    trackingSocket = null;
+  }
+}
+
+// ================= STATS FETCHING =================
+function fetchStats() {
+  const statsSection = document.getElementById('statsSection');
+  if (!statsSection) return; // Only run on homepage where stats exist
+
+  fetch(`${API_BASE_URL}/stats`)
+    .then(res => res.json())
+    .then(data => {
+      const usersEl = document.getElementById('stat-users');
+      const busesEl = document.getElementById('stat-buses');
+      const routesEl = document.getElementById('stat-routes');
+      
+      if (usersEl) usersEl.textContent = data.usersCount > 0 ? data.usersCount + '+' : '0';
+      if (busesEl) busesEl.textContent = data.busesCount > 0 ? data.busesCount : '0';
+      if (routesEl) routesEl.textContent = data.routesCount > 0 ? data.routesCount : '0';
+    })
+    .catch(err => console.error('Failed to fetch stats:', err));
+}
+
+// Call on load
+document.addEventListener('DOMContentLoaded', () => {
+  fetchStats();
+  fetchReviews();
+});
+
+// ================= REVIEWS LOGIC =================
+function fetchReviews() {
+  const reviewsContainer = document.getElementById('reviewsContainer');
+  if (!reviewsContainer) return;
+
+  fetch(`${API_BASE_URL}/reviews`)
+    .then(res => res.json())
+    .then(reviews => {
+      if (!reviews || reviews.length === 0) return; // Keep placeholders if empty
+      
+      reviewsContainer.innerHTML = '';
+      reviews.forEach(review => {
+        const dateStr = new Date(review.createdAt).toLocaleDateString();
+        const initial = review.user && review.user.name ? review.user.name.charAt(0).toUpperCase() : 'U';
+        const fullName = review.user && review.user.name ? review.user.name : 'Anonymous User';
+        
+        let photoUrl = '';
+        if (review.user && review.user.userPhoto) {
+          const raw = review.user.userPhoto;
+          if (raw.startsWith('data:') || raw.startsWith('http')) {
+            photoUrl = raw;
+          } else {
+            let clean = raw.replace(/\\/g, '/');
+            if (!clean.startsWith('/')) clean = '/' + clean;
+            photoUrl = API_BASE_URL.replace('/api', '') + clean;
+          }
+        }
+        
+        const avatarHtml = photoUrl ? `<img src="${photoUrl}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">` : initial;
+        
+        // Generate stars HTML
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+          if (i <= review.rating) {
+            starsHtml += '<i class="fas fa-star"></i>';
+          } else {
+            starsHtml += '<i class="far fa-star"></i>';
+          }
+        }
+
+        const card = document.createElement('div');
+        card.className = 'review-card';
+        card.innerHTML = `
+          <div class="review-header">
+            <div class="review-avatar">${avatarHtml}</div>
+            <div>
+              <div class="review-name">${fullName}</div>
+              <div class="review-date">${dateStr}</div>
+            </div>
+          </div>
+          <div class="review-rating">${starsHtml}</div>
+          <div class="review-text">"${review.comment}"</div>
+        `;
+        reviewsContainer.appendChild(card);
+      });
+    })
+    .catch(err => console.error('Failed to fetch reviews:', err));
+}
+
+// Review Modal Interactions
+const btnWriteReview = document.getElementById('btnWriteReview');
+const reviewModal = document.getElementById('reviewModal');
+const closeReviewModal = document.getElementById('closeReviewModal');
+const starWidgetIcons = document.querySelectorAll('#starRatingWidget i');
+const submitReviewBtn = document.getElementById('submitReviewBtn');
+const reviewComment = document.getElementById('reviewComment');
+let selectedRating = 0;
+
+if (btnWriteReview) {
+  btnWriteReview.addEventListener('click', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showToast('Please login to write a review.', 'warning');
+      setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+      return;
+    }
+    reviewModal.classList.add('open');
+  });
+}
+
+if (closeReviewModal) {
+  closeReviewModal.addEventListener('click', () => {
+    reviewModal.classList.remove('open');
+  });
+}
+
+// Star Rating Interaction
+if (starWidgetIcons.length > 0) {
+  starWidgetIcons.forEach(star => {
+    star.addEventListener('click', (e) => {
+      selectedRating = parseInt(e.target.getAttribute('data-rating'));
+      starWidgetIcons.forEach(s => {
+        if (parseInt(s.getAttribute('data-rating')) <= selectedRating) {
+          s.classList.replace('far', 'fas');
+          s.classList.add('active');
+        } else {
+          s.classList.replace('fas', 'far');
+          s.classList.remove('active');
+        }
+      });
+    });
+  });
+}
+
+// Submit Review
+if (submitReviewBtn) {
+  submitReviewBtn.addEventListener('click', () => {
+    if (selectedRating === 0) {
+      return showToast('Please select a star rating.', 'warning');
+    }
+    if (!reviewComment.value.trim()) {
+      return showToast('Please write a comment.', 'warning');
+    }
+
+    const token = localStorage.getItem('token');
+    
+    fetch(`${API_BASE_URL}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        rating: selectedRating,
+        comment: reviewComment.value.trim()
+      })
+    })
+    .then(async res => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit review');
+      return data;
+    })
+    .then(() => {
+      showToast('Thank you for your feedback!', 'success');
+      reviewModal.classList.remove('open');
+      reviewComment.value = '';
+      selectedRating = 0;
+      starWidgetIcons.forEach(s => {
+        s.classList.replace('fas', 'far');
+        s.classList.remove('active');
+      });
+      // Refresh reviews list
+      fetchReviews();
+    })
+    .catch(err => {
+      showToast(err.message, 'error');
+    });
+  });
+}
+
+// Global click interceptor for protected pages
+document.addEventListener('click', function(e) {
+  const link = e.target.closest('a');
+  if (!link) return;
+  const href = link.getAttribute('href');
+  if (href && (href.includes('wallet.html') || href.includes('history.html') || href.includes('profile.html'))) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      e.preventDefault();
+      
+      // If we have showToast, use it, otherwise use alert
+      if (typeof showToast === 'function') {
+        showToast('Please login first to use this feature.', 'warning');
+      } else {
+        alert('Please login first to use this feature.');
+      }
+    }
+  }
+});

@@ -102,14 +102,14 @@ const userSchema =
         default: ""
       },
 
-      // STUDENT ID NUMBER
-      studentIdNumber: {
-        type: String,
-        default: ""
+      // STARTING YEAR
+      startingYear: {
+        type: Number,
+        default: null
       },
       
-      // PASSING YEAR
-      passingYear: {
+      // ENDING YEAR
+      endingYear: {
         type: Number,
         default: null
       },
@@ -120,20 +120,8 @@ const userSchema =
         default: ""
       },
       
-      // INSTITUTION NAME
-      institutionName: {
-        type: String,
-        default: ""
-      },
-      
-      // COURSE
-      course: {
-        type: String,
-        default: ""
-      },
-      
-      // STUDENT ID PHOTO
-      studentIdPhoto: {
+      // CERTIFICATE PHOTO
+      certificatePhoto: {
         type: String,
         default: ""
       },
@@ -210,6 +198,16 @@ const userSchema =
         default: 0
       },
 
+      // MONTHLY PASS
+      monthlyPassBalance: {
+        type: Number,
+        default: 0
+      },
+      monthlyPassExpiry: {
+        type: Date,
+        default: null
+      },
+
       // CONDUCTOR EXPERIENCE (IN YEARS)
       experience: {
         type: Number,
@@ -220,6 +218,17 @@ const userSchema =
       lastUpiIdUsed: {
         type: String,
         default: ""
+      },
+
+      // BANK DETAILS
+      bankName: { type: String, default: "" },
+      accountNumber: { type: String, default: "" },
+      ifscCode: { type: String, default: "" },
+      upiId: { type: String, default: "" },
+
+      createdAt: {
+        type: Date,
+        default: Date.now
       }
     },
 
@@ -234,12 +243,4 @@ const userSchema =
 
 
 module.exports =
-
-  mongoose.model(
-
-    "User",
-
-    userSchema
-
-  );
-
+  mongoose.models.User || mongoose.model("User", userSchema);

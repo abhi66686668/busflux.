@@ -279,6 +279,8 @@
           buses = await res.json();
           const select = document.getElementById("busSelect");
           select.innerHTML = buses.map(b => `<option value="${b._id}">${b.busName} (${b.busNumber})</option>`).join("");
+          const liveSelect = document.getElementById("liveBusSelect");
+          if(liveSelect) liveSelect.innerHTML = select.innerHTML;
           handleBusChange();
         }
       } catch (err) {
@@ -291,7 +293,7 @@
       const bus = buses.find(b => b._id === busId);
       if (!bus) return;
 
-      const allStops = [bus.from, ...(bus.stops || []), bus.to];
+      const allStops = [...new Set([bus.from, ...(bus.stops || []), bus.to])];
       const bSelect = document.getElementById("boardingSelect");
       bSelect.innerHTML = allStops.slice(0, -1).map(stop => `<option value="${stop}">${stop}</option>`).join("");
       
@@ -307,7 +309,7 @@
       const bus = buses.find(b => b._id === busId);
       if (!bus) return;
 
-      const allStops = [bus.from, ...(bus.stops || []), bus.to];
+      const allStops = [...new Set([bus.from, ...(bus.stops || []), bus.to])];
       const boardingStop = document.getElementById("boardingSelect").value;
       const bIndex = allStops.indexOf(boardingStop);
 
@@ -456,7 +458,7 @@
     }
 
     function getStopRatio(bus, boardingPoint, droppingPoint) {
-      const allStops = [bus.from, ...(bus.stops || []), bus.to];
+      const allStops = [...new Set([bus.from, ...(bus.stops || []), bus.to])];
       const total = allStops.length - 1;
       if (total === 0) return 1;
       const bIdx = allStops.findIndex(s => s.toLowerCase() === boardingPoint.toLowerCase());
@@ -1517,6 +1519,77 @@
           <div style="color: var(--text-muted); font-weight: 600; font-size: 0.95rem; text-align: center;">Waiting for Ticket scan</div>
           <div style="color: var(--text-muted); font-size: 0.78rem; margin-top: 5px; text-align: center;">Upload the ticket QR image or type the ID manually.</div>
         `;
+      }
+    }
+
+    let journeyActive = false;
+    let watchId = null;
+
+    function toggleJourney() {
+      const busId = document.getElementById("liveBusSelect").value;
+      if (!busId) {
+        alert("Please select a bus.");
+        return;
+      }
+      const btn = document.getElementById("startJourneyBtn");
+      const status = document.getElementById("journeyStatus");
+      
+      if (!journeyActive) {
+        journeyActive = true;
+        btn.innerHTML = `<i class="fas fa-stop"></i> Stop Journey`;
+        btn.style.background = 'var(--danger)';
+        status.innerHTML = `<span style="color:var(--success)"><i class="fas fa-circle-check"></i> Journey Active (GPS Tracking...)</span>`;
+        
+        if (navigator.geolocation) {
+          watchId = navigator.geolocation.watchPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+          }, (err) => {
+            console.error("GPS Error:", err);
+          }, { enableHighAccuracy: true });
+        }
+      } else {
+        journeyActive = false;
+        btn.innerHTML = `<i class="fas fa-play"></i> Start Journey`;
+        btn.style.background = 'var(--primary)';
+        status.innerHTML = `Status: Not Started`;
+        if (watchId) {
+          navigator.geolocation.clearWatch(watchId);
+        }
+      }
+    }
+
+    async function updateNextStop() {
+      if (!journeyActive) {
+        alert("Please start the journey first.");
+        return;
+      }
+      const busId = document.getElementById("liveBusSelect").value;
+      const nextStop = document.getElementById("manualNextStop").value.trim();
+      if (!nextStop) {
+        alert("Please enter a stop name.");
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API}/conductor/update-stop`, {
+          method: 'PUT',
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ busId: busId, nextStop: nextStop })
+        });
+        if (res.ok) {
+          addNotification("Stop Updated", \`Next stop set to: \${nextStop}\`, "success");
+          document.getElementById("manualNextStop").value = '';
+        } else {
+          const errData = await res.json();
+          addNotification("Error", errData.message || "Failed to update stop.", "danger");
+        }
+      } catch (err) {
+        console.error(err);
+        addNotification("Connection Error", "Network or server connection issue.", "danger");
       }
     }
 

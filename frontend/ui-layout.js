@@ -210,7 +210,7 @@ window.showOffersToast = function() {
   const modalHtml = `
     <div id="offersModal" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity: 0; transition: opacity 0.3s ease;">
       <div style="background:${cardBg}; border-radius:16px; width:90%; max-width:450px; padding:30px; box-shadow:0 20px 40px rgba(0,0,0,0.3); transform: translateY(30px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position:relative;">
-        <button onclick="closeOffersModal()" style="position:absolute; top:20px; right:20px; background:transparent; border:none; color:${mutedColor}; font-size:1.4rem; cursor:pointer; transition: color 0.2s;"><i class="fas fa-times"></i></button>
+        <button class="icon-btn" onclick="closeOffersModal()" style="position:absolute; top:20px; right:20px; width:auto; height:auto; padding:0; background:transparent !important; border:none; box-shadow:none; color:${mutedColor}; font-size:1.4rem; cursor:pointer; transition: color 0.2s;"><i class="fas fa-times"></i></button>
         
         <div style="text-align: center; margin-bottom: 25px;">
           <div style="display:inline-flex; align-items:center; justify-content:center; width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg, #8b5cf6, #ec4899); color:#fff; font-size:1.8rem; margin-bottom:15px; box-shadow:0 10px 20px rgba(236, 72, 153, 0.3);">
@@ -222,35 +222,13 @@ window.showOffersToast = function() {
         
         <div style="display:flex; flex-direction:column; gap:16px;">
           <!-- Offer 1 -->
-          <div style="background:${isDark ? 'rgba(34, 197, 94, 0.1)' : '#f0fdf4'}; border:1px dashed #22c55e; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px;">
-            <div style="background:#22c55e; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
-              <i class="fas fa-percent"></i>
-            </div>
-            <div style="flex:1;">
-              <h4 style="color:${isDark ? '#4ade80' : '#166534'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">First Ride Free</h4>
-              <p style="color:${isDark ? '#86efac' : '#15803d'}; margin:0; font-size:0.85rem; line-height:1.4;">Get 100% off (up to ₹50) on your very first BusFlux booking.</p>
-            </div>
-          </div>
-          
-          <!-- Offer 2 -->
           <div style="background:${isDark ? 'rgba(245, 158, 11, 0.1)' : '#fffbeb'}; border:1px dashed #f59e0b; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px;">
             <div style="background:#f59e0b; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
               <i class="fas fa-wallet"></i>
             </div>
             <div style="flex:1;">
               <h4 style="color:${isDark ? '#fbbf24' : '#b45309'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">Cashback Fiesta</h4>
-              <p style="color:${isDark ? '#fcd34d' : '#b45309'}; margin:0; font-size:0.85rem; line-height:1.4;">Recharge wallet with ₹500+ and get a flat ₹50 instant cashback.</p>
-            </div>
-          </div>
-
-          <!-- Offer 3 -->
-          <div style="background:${isDark ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff'}; border:1px dashed #3b82f6; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px;">
-            <div style="background:#3b82f6; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
-              <i class="fas fa-route"></i>
-            </div>
-            <div style="flex:1;">
-              <h4 style="color:${isDark ? '#60a5fa' : '#1d4ed8'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">Weekend Getaway</h4>
-              <p style="color:${isDark ? '#93c5fd' : '#1e40af'}; margin:0; font-size:0.85rem; line-height:1.4;">20% discount on all weekend rides starting from State Bank terminal.</p>
+              <p style="color:${isDark ? '#fcd34d' : '#b45309'}; margin:0; font-size:0.85rem; line-height:1.4;">First recharge will get ₹100 cash back!</p>
             </div>
           </div>
         </div>
@@ -385,3 +363,15 @@ if (document.readyState === 'loading') {
   // DOM already loaded — run immediately
   uiLayoutInit();
 }
+
+// Load Chatbot globally
+(function() {
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = 'chatbot.css';
+  document.head.appendChild(css);
+
+  const script = document.createElement('script');
+  script.src = 'chatbot.js';
+  document.body.appendChild(script);
+})();

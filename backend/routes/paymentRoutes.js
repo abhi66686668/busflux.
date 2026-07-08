@@ -6,8 +6,10 @@ const auth = require("../middleware/auth");
 const Bus = require("../models/Bus");
 const User = require("../models/User");
 const Booking = require("../models/Booking");
+const OwnerTransaction = require("../models/OwnerTransaction");
 const Transaction = require("../models/Transaction");
 const Notification = require("../models/Notification");
+const Setting = require("../models/Setting");
 const nodemailer = require("nodemailer");
 
 // Razorpay instance
@@ -139,6 +141,20 @@ router.post("/verify", auth, async (req, res) => {
       paymentStatus: "paid"
     });
 
+    const setting = await Setting.findOne({ key: "commissionPercentage" });
+    const commPct = setting && !isNaN(setting.value) ? parseFloat(setting.value) : 10;
+    const commissionAmount = Math.round(totalPrice * (commPct / 100));
+    const ownerAmount = totalPrice - commissionAmount;
+
+    await OwnerTransaction.create({
+      bookingId: booking._id,
+      busId: bus._id,
+      ticketAmount: totalPrice,
+      commissionAmount,
+      ownerAmount,
+      status: "Pending Settlement"
+    });
+
     // Notify admin
     try {
       const notif = await Notification.create({
@@ -264,16 +280,8 @@ router.post("/wallet-verify", auth, async (req, res) => {
     const user = await User.findById(req.user.id);
     const rechargeAmount = Number(amount);
     
-    let bonusPercent = 0.05;
+    let bonusPercent = 0.10;
     let passName = "Standard Pass";
-    const age = user.age || 0;
-    if ((age >= 5 && age <= 14) || age >= 60) {
-      bonusPercent = 0.30;
-      passName = "Golden Pass";
-    } else if (age >= 15 && age <= 24) {
-      bonusPercent = 0.20;
-      passName = "Youth Express Pass";
-    }
 
     const bonus = Math.round(rechargeAmount * bonusPercent);
     const totalCredit = rechargeAmount + bonus;
@@ -337,6 +345,70 @@ router.get("/wallet-balance", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     res.json({ balance: user?.balance || 0, name: user?.name || "" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+// ================= BUY MONTHLY PASS =================
+router.post("/buy-monthly-pass", auth, async (req, res) => {
+  try {
+    const { amount, days } = req.body;
+    if (!amount || amount < 100) {
+      return res.status(400).json({ message: "Invalid pass amount (minimum ₹100)" });
+    }
+
+    const validityDays = days || 30;
+    const user = await User.findById(req.user.id);
+
+    // Carry Over Logic
+    let newBalance = Number(amount);
+    let carriedForward = 0;
+    if (user.monthlyPassExpiry && user.monthlyPassExpiry > new Date()) {
+      carriedForward = user.monthlyPassBalance || 0;
+      newBalance += carriedForward;
+    }
+
+    user.monthlyPassBalance = newBalance;
+    
+    // Set expiry based on validityDays
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + validityDays);
+    user.monthlyPassExpiry = expiryDate;
+
+    await user.save();
+
+    await Transaction.create({
+      userId: user._id,
+      amount: amount,
+      totalCredit: amount,
+      method: req.body.method || "Razorpay (Pass)",
+      status: "Completed"
+    });
+
+    try {
+      const io = req.app.get('io');
+      const userNotif = await Notification.create({
+        title: "Wallet Pass Activated",
+        message: `Successfully activated pass with ₹${amount} credit. Total pass balance: ₹${newBalance}. Expires on: ${expiryDate.toDateString()}`,
+        type: "success",
+        targetRole: "user",
+        targetUser: user._id
+      });
+
+      if (io) {
+        io.to(user._id.toString()).emit('new_notification', userNotif);
+        io.to(user._id.toString()).emit('user_data_updated');
+      }
+    } catch(err) { console.error(err); }
+
+    res.status(200).json({
+      message: `Pass of ₹${amount} activated successfully!`,
+      newBalance: user.monthlyPassBalance,
+      expiryDate: user.monthlyPassExpiry,
+      carriedForward: carriedForward
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

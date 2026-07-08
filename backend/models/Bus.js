@@ -44,7 +44,12 @@ const busSchema = new mongoose.Schema({
   // ── Status ──
   isActive: { type: Boolean, default: true },
   isExpress: { type: Boolean, default: false },
-  busType: { type: String, default: "Ordinary" }
+  busType: { type: String, default: "Ordinary" },
+
+  // ── Tracking ──
+  currentLat: { type: Number, default: null },
+  currentLng: { type: Number, default: null },
+  nextStop: { type: String, default: "" }
 
 }, { timestamps: true });
 

@@ -276,7 +276,7 @@ router.post(
       maxCount: 1
     },
     {
-      name: "studentIdPhoto",
+      name: "certificatePhoto",
       maxCount: 1
     }
   ]),
@@ -299,11 +299,9 @@ router.post(
       collegeId,
       gender,
       institutionType,
-      institutionName,
-      course,
-      studentIdNumber,
       dob,
-      passingYear
+      startingYear,
+      endingYear
     } = req.body;
 
 
@@ -324,14 +322,7 @@ router.post(
         }
       }
 
-      if (studentIdNumber) {
-        const existingStudentId = await User.findOne({ studentIdNumber });
-        if (existingStudentId && (!user || existingStudentId._id.toString() !== user._id.toString())) {
-          return res.status(400).json({
-            message: "Student ID card already registered"
-          });
-        }
-      }
+      // Removed studentIdNumber check as we now use certificate upload
 
       if (!user) {
         user = new User({ email, isVerified: true });
@@ -411,31 +402,27 @@ router.post(
       if (dob) user.dob = dob;
 
       let isStudentExpired = false;
-      if (passingYear) {
-        user.passingYear = Number(passingYear);
-        if (new Date().getFullYear() > user.passingYear) {
+      if (endingYear) {
+        user.endingYear = Number(endingYear);
+        if (new Date().getFullYear() > user.endingYear) {
           isStudentExpired = true;
         }
       }
+      
+      if (startingYear) {
+        user.startingYear = Number(startingYear);
+      }
 
-      if (isStudentExpired && passingYear) {
+      if (isStudentExpired && endingYear) {
         return res.status(400).json({
           message: "Your passing year has expired. You cannot register as a student."
         });
       }
 
       if (!isStudentExpired) {
-        user.collegeId = collegeId;
         if (institutionType) user.institutionType = institutionType;
-        if (institutionName) user.institutionName = institutionName;
-        if (course) user.course = course;
-        if (studentIdNumber) user.studentIdNumber = studentIdNumber;
       } else {
-        user.collegeId = "";
         user.institutionType = "";
-        user.institutionName = "";
-        user.course = "";
-        user.studentIdNumber = "";
       }
 
       user.password =
@@ -457,10 +444,10 @@ router.post(
         user.idCardPhoto = `data:${f.mimetype};base64,${f.buffer.toString('base64')}`;
       }
       
-      // STUDENT ID PHOTO
-      if(!isStudentExpired && req.files && req.files.studentIdPhoto){
-        const f = req.files.studentIdPhoto[0];
-        user.studentIdPhoto = `data:${f.mimetype};base64,${f.buffer.toString('base64')}`;
+      // CERTIFICATE PHOTO
+      if(!isStudentExpired && req.files && req.files.certificatePhoto){
+        const f = req.files.certificatePhoto[0];
+        user.certificatePhoto = `data:${f.mimetype};base64,${f.buffer.toString('base64')}`;
       }
 
 
@@ -925,12 +912,16 @@ router.put("/me", auth, upload.fields([{ name: "userPhoto", maxCount: 1 }]), asy
   try {
     console.log("PUT /me headers:", req.headers["content-type"]);
     console.log("PUT /me body:", req.body);
-    const { name, phone, age, experience } = req.body || {};
+    const { name, phone, age, experience, bankName, accountNumber, ifscCode, upiId } = req.body || {};
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (name !== undefined) user.name = name;
     if (phone !== undefined) user.phone = phone;
+    if (bankName !== undefined) user.bankName = bankName;
+    if (accountNumber !== undefined) user.accountNumber = accountNumber;
+    if (ifscCode !== undefined) user.ifscCode = ifscCode;
+    if (upiId !== undefined) user.upiId = upiId;
     if (age !== undefined) {
       user.age = Number(age) || 0;
       if(user.age >= 5 && user.age <= 14) user.ageGroup = "Children";
@@ -1002,16 +993,8 @@ router.post("/wallet/verify-payment", auth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    let bonusPercent = 0.05;
+    let bonusPercent = 0.10;
     let passName = "Standard Pass";
-    const age = user.age;
-    if ((age >= 5 && age <= 14) || age >= 60) {
-      bonusPercent = 0.30;
-      passName = "Golden Pass";
-    } else if (age >= 15 && age <= 24) {
-      bonusPercent = 0.20;
-      passName = "Youth Express Pass";
-    }
 
     const bonus = Math.round(rechargeAmount * bonusPercent);
     const totalCredit = rechargeAmount + bonus;
@@ -1046,7 +1029,7 @@ router.post("/wallet/verify-payment", auth, async (req, res) => {
 router.get("/wallet/transactions", auth, async (req, res) => {
   try {
     const recharges = await Transaction.find({ userId: req.user.id }).sort({ createdAt: -1 });
-    const bookings = await Booking.find({ userId: req.user.id }).populate("busId").sort({ createdAt: -1 });
+    const bookings = await Booking.find({ userId: req.user.id }).populate("busId").populate("scannedBy").sort({ createdAt: -1 });
     
     // Combine them
     const combined = [];
@@ -1076,7 +1059,9 @@ router.get("/wallet/transactions", auth, async (req, res) => {
         seatsBooked: b.seatsBooked,
         status: b.status === "paid" ? "Paid" : b.status,
         paymentMethod: b.paymentMethod,
-        createdAt: b.createdAt
+        createdAt: b.createdAt,
+        conductorName: b.scannedBy ? b.scannedBy.name : null,
+        ticketId: b._id
       });
     });
     

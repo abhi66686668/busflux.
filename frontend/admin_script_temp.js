@@ -35,6 +35,8 @@ function checkAuth() {
     loadConductors();
     loadBookings();
     loadTransactions();
+    fetchSettlementsDashboard();
+    loadSettings();
     const savedPage = sessionStorage.getItem("adminCurrentPage") || "dashboard";
     showPage(savedPage);
   }
@@ -56,7 +58,7 @@ async function adminLogin() {
       document.getElementById("adminPassword").value = "";
       document.getElementById("loginScreen").style.display = "none";
       toast("Welcome back, " + (data.name||"Admin"), "success");
-      loadDashboard(); loadBuses(); loadUsers(); loadConductors(); loadBookings(); loadTransactions();
+      loadDashboard(); loadBuses(); loadUsers(); loadConductors(); loadBookings(); loadTransactions(); loadSettings();
       const savedPage = sessionStorage.getItem("adminCurrentPage") || "dashboard";
       showPage(savedPage);
     } else {
@@ -97,8 +99,8 @@ function showPage(name, btn) {
   }
 
   document.getElementById("topbarTitle").textContent = {
-    dashboard:"Dashboard", buses:"Bus Fleet", users:"Users", conductors:"Conductors", bookings:"Bookings", transactions:"Wallet Transactions"
-  }[name] || name;
+    dashboard:"Dashboard", buses:"Bus Fleet", users:"Users", conductors:"Conductors", bookings:"Bookings", transactions:"Wallet Transactions", settings: "System Settings"
+  }[name] || "Dashboard";
   
   sessionStorage.setItem("adminCurrentPage", name);
 }
@@ -113,6 +115,8 @@ async function loadDashboard() {
     document.getElementById("sTotalBookings").textContent   = data.totalBookings ?? "--";
     document.getElementById("sTotalRevenue").textContent    = data.totalRevenue ? "₹" + data.totalRevenue.toLocaleString() : "₹0";
     document.getElementById("sTotalConductors").textContent = data.totalConductors ?? "--";
+    const profitEl = document.getElementById("sTotalAdminProfit");
+    if (profitEl) profitEl.textContent = data.totalAdminProfit ? "₹" + data.totalAdminProfit.toLocaleString() : "₹0";
 
     // Age group cards
     const colors = ["purple","green","orange","blue","pink","teal"];
@@ -1065,3 +1069,246 @@ function toggleTheme() {
 
 document.addEventListener("DOMContentLoaded", initTheme);
 
+// ================= SETTINGS =================
+async function loadSettings() {
+  try {
+    const res = await fetch(`${API}/settings/paymentQRCode`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.value) {
+        document.getElementById("adminQrPreview").src = data.value;
+        document.getElementById("adminQrPreview").style.display = "block";
+        document.getElementById("adminQrIcon").style.display = "none";
+        document.getElementById("adminQrText").textContent = "Click to change QR Code";
+      }
+    }
+  } catch (e) {
+    console.error("Failed to load settings", e);
+  }
+}
+
+function previewAdminQr(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById("adminQrPreview").src = e.target.result;
+      document.getElementById("adminQrPreview").style.display = "block";
+      document.getElementById("adminQrIcon").style.display = "none";
+      document.getElementById("adminQrText").textContent = "Click to change QR Code";
+    }
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function toggleQrSource() {
+  const source = document.querySelector('input[name="qrSource"]:checked').value;
+  if (source === 'upload') {
+    document.getElementById('qrUploadSection').style.display = 'block';
+    document.getElementById('qrGenerateSection').style.display = 'none';
+  } else {
+    document.getElementById('qrUploadSection').style.display = 'none';
+    document.getElementById('qrGenerateSection').style.display = 'block';
+  }
+}
+
+async function saveAdminSettings() {
+  const source = document.querySelector('input[name="qrSource"]:checked').value;
+  const formData = new FormData();
+  
+  if (source === 'upload') {
+    const fileInput = document.getElementById("adminQrUpload");
+    if (!fileInput.files || !fileInput.files[0]) {
+      return toast("Please select a QR code image to upload.", "warning");
+    }
+    formData.append("qrCode", fileInput.files[0]);
+  } else {
+    const upiId = document.getElementById("adminUpiId").value.trim();
+    if (!upiId) return toast("Please enter a UPI ID.", "warning");
+    
+    let name = document.getElementById("adminUpiName").value.trim();
+    if (!name) name = "BusFlux";
+    
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(name)}`;
+    formData.append("qrUrl", qrUrl);
+  }
+  
+  const btn = document.querySelector(".btn-save");
+  const oldText = btn.innerHTML;
+  btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+  btn.disabled = true;
+  
+  try {
+    const res = await fetch(`${API}/settings/payment-qr`, {
+      method: "PUT",
+      headers: { "Authorization": `Bearer ${adminToken}` },
+      body: formData // if it doesn't contain a file, it's just a multipart request with fields
+    });
+    const data = await res.json();
+    if (res.ok) {
+      toast(data.message || "Settings saved successfully", "success");
+      if (source === 'generate') {
+        document.getElementById("adminQrPreview").src = data.value;
+        document.getElementById("adminQrPreview").style.display = "block";
+        document.getElementById("adminQrIcon").style.display = "none";
+        document.getElementById("adminQrText").textContent = "Click to change QR Code";
+      }
+    } else {
+      toast(data.message || "Failed to save settings", "error");
+    }
+  } catch (e) {
+    toast("Network error. Failed to save.", "error");
+  } finally {
+    btn.innerHTML = oldText;
+    btn.disabled = false;
+  }
+}
+
+// ── SETTLEMENTS ──
+async function fetchSettlementsDashboard() {
+  if (!adminToken) return;
+  try {
+    const res = await fetch(`${API}/settlement/dashboard`, {
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      try {
+        const setRes = await fetch(`${API}/settings/commissionPercentage`);
+        if (setRes.ok) {
+          const setData = await setRes.json();
+          document.getElementById('commissionRateDisplay').innerText = `(${setData.value || 10}%)`;
+        } else {
+          document.getElementById('commissionRateDisplay').innerText = `(10%)`;
+        }
+      } catch(e) { console.error(e); }
+
+      document.getElementById('settleTotalRevenue').innerText = `₹${data.data.totalRevenue}`;
+      document.getElementById('settleTotalCommission').innerText = `₹${data.data.totalCommission}`;
+      document.getElementById('settleTotalPayable').innerText = `₹${data.data.totalPayable}`;
+      
+      const tbody = document.getElementById('settlementsBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (data.data.ownerStats.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">No pending settlements</td></tr>`;
+      } else {
+        data.data.ownerStats.forEach(stat => {
+          tbody.innerHTML += `
+            <tr>
+              <td><div style="font-weight:600">${stat.ownerName || 'Unknown Owner'}</div></td>
+              <td>${stat.ticketsSold}</td>
+              <td>₹${stat.totalSales}</td>
+              <td style="color:var(--warning)">₹${stat.commission}</td>
+              <td style="color:var(--success); font-weight:700">₹${stat.payableAmount}</td>
+            </tr>
+          `;
+        });
+      }
+    }
+    
+    // Fetch History as well
+    fetchSettlementHistory();
+  } catch (err) {
+    console.error("Error fetching settlements:", err);
+  }
+}
+
+async function fetchSettlementHistory() {
+  if (!adminToken) return;
+  try {
+    const res = await fetch(`${API}/settlement/history`, {
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    const tbody = document.getElementById('settlementHistoryBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    if (data.success && data.data && data.data.length > 0) {
+      data.data.forEach(item => {
+        const date = new Date(item.createdAt).toLocaleDateString('en-IN', {
+          year: 'numeric', month: 'short', day: 'numeric',
+          hour: '2-digit', minute:'2-digit'
+        });
+        const busName = item.busId ? item.busId.busName : 'Unknown Bus';
+        
+        tbody.innerHTML += `
+          <tr>
+            <td>${date}</td>
+            <td><div style="font-weight:600">${busName}</div></td>
+            <td><span class="status-badge" style="background:var(--primary);color:#fff">${item.month}</span></td>
+            <td>₹${item.totalSales}</td>
+            <td style="color:var(--warning)">₹${item.commission}</td>
+            <td style="color:var(--success); font-weight:700">₹${item.payableAmount}</td>
+            <td><span class="status-badge" style="background:var(--success);color:#fff">${item.paymentStatus}</span></td>
+          </tr>
+        `;
+      });
+    } else {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">No settlement history available</td></tr>`;
+    }
+  } catch(e) {
+    console.error("Error fetching settlement history:", e);
+  }
+}
+
+function toggleSettlementHistory() {
+  const section = document.getElementById('settlementHistorySection');
+  if (section.style.display === 'none' || section.style.display === '') {
+    section.style.display = 'block';
+    // Scroll smoothly to it
+    setTimeout(() => {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+async function editCommissionRate() {
+  const newRate = prompt("Enter new commission percentage (e.g. 10):");
+  if (newRate === null || newRate.trim() === "") return;
+  const rate = parseFloat(newRate);
+  if (isNaN(rate) || rate < 0 || rate > 100) {
+    alert("Please enter a valid percentage between 0 and 100.");
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/settings/commission-rate`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${adminToken}` },
+      body: JSON.stringify({ rate })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      toast("Commission rate updated!", "success");
+      document.getElementById('commissionRateDisplay').innerText = `(${data.value}%)`;
+    } else {
+      toast(data.message || "Failed to update", "error");
+    }
+  } catch(e) {
+    toast("Network error", "error");
+  }
+}
+
+async function generateSettlement() {
+  if (!adminToken) return;
+  if (!confirm("Are you sure you want to generate settlement and mark all pending owner earnings as Paid?")) return;
+  
+  try {
+    const res = await fetch(`${API}/settlement/generate`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast("Settlement Generated successfully!", "success");
+      fetchSettlementsDashboard();
+    } else {
+      toast(data.message || "Failed to generate settlement", "error");
+    }
+  } catch (err) {
+    console.error("Error generating settlement:", err);
+    toast("Network error while generating settlement", "error");
+  }
+}

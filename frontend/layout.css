@@ -1014,6 +1014,7 @@
       .sidebar-overlay.open { display: block; }
       .main-content { margin-left: 0; }
       .mobile-menu-btn { display: flex; }
+
       .hero-text h1 { font-size: 2rem; }
       .hero-img-wrap { width: 45%; }
       .stats-section { flex-wrap: wrap; }

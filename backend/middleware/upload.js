@@ -16,8 +16,7 @@ const fileFilter =
   (req, file, cb) => {
 
     const allowedTypes =
-
-      /jpeg|jpg|png/;
+      /jpeg|jpg|png|webp|avif|gif/;
 
 
 
@@ -61,11 +60,7 @@ const fileFilter =
     // INVALID FILE
     cb(
 
-      new Error(
-
-        "Only JPG, JPEG, PNG images allowed"
-
-      )
+      new Error("Only JPG, JPEG, PNG, WEBP, AVIF, GIF images allowed")
 
     );
 

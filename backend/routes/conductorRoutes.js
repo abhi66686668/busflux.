@@ -4,6 +4,8 @@ const Booking = require("../models/Booking");
 const User = require("../models/User");
 const Bus = require("../models/Bus");
 const Notification = require("../models/Notification");
+const OwnerTransaction = require("../models/OwnerTransaction");
+const Setting = require("../models/Setting");
 const auth = require("../middleware/auth");
 
 // Helper: get age-group price
@@ -113,6 +115,39 @@ router.post("/scan", auth, async (req, res) => {
       passenger: booking.userId,
       booking: booking
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /settlement-dues
+router.get("/settlement-dues", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "conductor") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Find all bookings scanned by this conductor
+    const bookings = await Booking.find({ scannedBy: req.user.id });
+    const bookingIds = bookings.map(b => b._id);
+
+    // Find pending settlement transactions for these bookings
+    const pendingTransactions = await OwnerTransaction.find({
+      bookingId: { $in: bookingIds },
+      status: "Pending Settlement"
+    });
+
+    let totalCollected = 0;
+    let commissionDue = 0;
+    let payableToOwner = 0;
+
+    pendingTransactions.forEach(tx => {
+      totalCollected += tx.ticketAmount;
+      commissionDue += tx.commissionAmount;
+      payableToOwner += tx.ownerAmount;
+    });
+
+    res.status(200).json({ success: true, totalCollected, commissionDue, payableToOwner });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -243,7 +278,12 @@ router.post("/deduct-pass", auth, async (req, res) => {
     }
 
     // 4. Check balance
-    if (passenger.balance < totalPrice) {
+    let passUsed = false;
+    if (passenger.monthlyPassExpiry && passenger.monthlyPassExpiry > new Date() && (passenger.monthlyPassBalance || 0) >= totalPrice) {
+      passUsed = true;
+    } else if ((passenger.balance || 0) >= totalPrice) {
+      passUsed = false;
+    } else {
       // Transaction failed - but we STILL store it in the database as a failed booking/transaction
       const failedBooking = await Booking.create({
         userId: passenger._id,
@@ -290,7 +330,11 @@ router.post("/deduct-pass", auth, async (req, res) => {
     }
 
     // 5. Sufficient balance - deduct and log success
-    passenger.balance -= totalPrice;
+    if (passUsed) {
+      passenger.monthlyPassBalance -= totalPrice;
+    } else {
+      passenger.balance -= totalPrice;
+    }
     await passenger.save();
 
     const booking = await Booking.create({
@@ -305,6 +349,21 @@ router.post("/deduct-pass", auth, async (req, res) => {
       status: "scanned",
       scannedBy: req.user.id,
       scannedAt: Date.now()
+    });
+
+    // Create Settlement Transaction
+    const setting = await Setting.findOne({ key: "commissionPercentage" });
+    const commPct = setting && !isNaN(setting.value) ? parseFloat(setting.value) : 10;
+    const commissionAmount = Math.round(totalPrice * (commPct / 100));
+    const ownerAmount = totalPrice - commissionAmount;
+
+    await OwnerTransaction.create({
+      bookingId: booking._id,
+      busId: bus._id,
+      ticketAmount: totalPrice,
+      commissionAmount,
+      ownerAmount,
+      status: "Pending Settlement"
     });
 
     // Notify admin & user
@@ -437,6 +496,35 @@ router.post("/refund-booking", auth, async (req, res) => {
       newBalance: passenger.balance,
       booking
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /update-stop
+router.put("/update-stop", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "conductor") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { busId, nextStop } = req.body;
+    if (!busId || !nextStop) {
+      return res.status(400).json({ message: "busId and nextStop are required" });
+    }
+
+    const bus = await Bus.findById(busId);
+    if (!bus) return res.status(404).json({ message: "Bus not found" });
+
+    bus.nextStop = nextStop;
+    await bus.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`bus_${bus._id.toString()}`).emit('bus_location_update', { busId: bus._id, nextStop });
+    }
+
+    return res.status(200).json({ message: "Stop updated successfully", bus });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

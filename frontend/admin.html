@@ -147,19 +147,39 @@
 
     /* ── STAT CARDS ── */
     .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
-    .stat-card{
-      background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);
-      padding:22px;display:flex;align-items:center;gap:16px;transition:var(--tr);
+    .stat-card {
+      background: linear-gradient(145deg, var(--card-bg), rgba(255,255,255,0.02));
+      border: 1px solid var(--card-border); border-radius: 18px;
+      padding: 24px; display: flex; align-items: center; gap: 18px; 
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     }
-    .stat-card:hover{border-color:rgba(99,102,241,.25);transform:translateY(-2px)}
-    .stat-icon{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-    .stat-icon.purple{background:rgba(99,102,241,.15);color:var(--primary)}
-    .stat-icon.green{background:rgba(16,185,129,.15);color:var(--success)}
-    .stat-icon.orange{background:rgba(245,158,11,.15);color:var(--warning)}
-    .stat-icon.blue{background:rgba(14,165,233,.15);color:var(--info)}
-    .stat-icon.pink{background:rgba(244,63,94,.15);color:var(--danger)}
-    .stat-val{font-size:1.8rem;font-weight:800;line-height:1}
-    .stat-label{font-size:.8rem;color:var(--muted);margin-top:4px}
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      transform: skewX(-20deg); transition: 0.6s ease-in-out;
+    }
+    .stat-card:hover::before { left: 150%; }
+    .stat-card:hover { 
+      border-color: rgba(99,102,241,0.4); 
+      transform: translateY(-6px); 
+      box-shadow: 0 12px 35px rgba(99,102,241,0.15); 
+    }
+    .stat-icon {
+      width: 56px; height: 56px; border-radius: 14px; 
+      display: flex; align-items: center; justify-content: center; 
+      font-size: 1.4rem; flex-shrink: 0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      transition: transform 0.3s ease;
+    }
+    .stat-card:hover .stat-icon { transform: scale(1.1) rotate(5deg); }
+    .stat-icon.purple{background:linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.15));color:var(--primary)}
+    .stat-icon.green{background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15));color:var(--success)}
+    .stat-icon.orange{background:linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.15));color:var(--warning)}
+    .stat-icon.blue{background:linear-gradient(135deg, rgba(14,165,233,0.15), rgba(56,189,248,0.15));color:var(--info)}
+    .stat-val{font-size:2rem;font-weight:800;line-height:1.1;letter-spacing:-0.5px;color:var(--text)}
+    .stat-label{font-size:0.85rem;font-weight:500;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:0.5px}
 
     /* ── SECTION HEADERS ── */
     .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
@@ -361,6 +381,8 @@
     <button class="sb-item" onclick="showPage('conductors',this)"><i class="fas fa-user-tie"></i> Conductors</button>
     <button class="sb-item" onclick="showPage('bookings',this)"><i class="fas fa-ticket"></i> Bookings</button>
     <button class="sb-item" onclick="showPage('transactions',this)"><i class="fas fa-wallet"></i> Transactions</button>
+    <button class="sb-item" onclick="showPage('settlements',this)"><i class="fas fa-file-invoice-dollar"></i> Settlements</button>
+    <button class="sb-item" onclick="showPage('profit',this)"><i class="fas fa-chart-line"></i> Platform Commission</button>
   </div>
   <div class="sb-bottom">
     <div class="admin-badge">
@@ -415,6 +437,7 @@
       <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-ticket"></i></div><div><div class="stat-val" id="sTotalBookings">"“</div><div class="stat-label">Total Bookings</div></div></div>
       <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-indian-rupee-sign"></i></div><div><div class="stat-val" id="sTotalRevenue">"“</div><div class="stat-label">Total Revenue</div></div></div>
       <div class="stat-card"><div class="stat-icon purple" style="background:rgba(168,85,247,.15);color:#a855f7"><i class="fas fa-user-tie"></i></div><div><div class="stat-val" id="sTotalConductors">"“</div><div class="stat-label">Total Conductors</div></div></div>
+      <div class="stat-card"><div class="stat-icon green" style="background:rgba(16,185,129,.15);color:var(--success)"><i class="fas fa-wallet"></i></div><div><div class="stat-val" id="sTotalAdminProfit">"“</div><div class="stat-label">Total Platform Profit</div></div></div>
     </div>
 
     <div class="sec-head"><h2><i class="fas fa-users" style="color:var(--primary);margin-right:8px"></i>Users by Age Group</h2></div>
@@ -504,8 +527,13 @@
 
   <!-- ── TRANSACTIONS ── -->
   <div class="page" id="page-transactions">
-    <div class="sec-head">
+    <div class="sec-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <h2><i class="fas fa-wallet" style="color:var(--primary);margin-right:8px"></i>Wallet Transactions</h2>
+      <div style="display:flex; align-items:center; gap: 15px;">
+        <input type="date" id="transactionDateFilter" onchange="filterTransactions()" style="padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border); outline: none; font-size: 0.9rem; background: var(--surface); color: var(--text); cursor: pointer;" title="Filter by Date">
+        <input type="text" id="transactionFilter" placeholder="Search name, email, method..." style="padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border); outline: none; min-width: 250px; font-size: 0.9rem; background: var(--surface); color: var(--text);" onkeyup="filterTransactions()">
+        <div id="totalWalletRecharges" style="background:var(--success); color:#fff; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; display: none; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">Total: ₹0</div>
+      </div>
     </div>
     <div class="table-wrap">
       <table>
@@ -515,6 +543,116 @@
           </tr>
         </thead>
         <tbody id="transactionsBody"><tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">Loading transactions...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── SETTLEMENTS ── -->
+  <div class="page" id="page-settlements">
+    <div class="sec-head">
+      <h2><i class="fas fa-file-invoice-dollar" style="color:var(--primary);margin-right:8px"></i>Monthly Settlement</h2>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-add" style="background:var(--secondary); color:#fff;" onclick="toggleSettlementHistory()"><i class="fas fa-history"></i> History</button>
+        <button class="btn-add" onclick="fetchSettlementsDashboard()"><i class="fas fa-sync"></i> Refresh</button>
+        <button class="btn-add" style="background:var(--success)" onclick="generateSettlement()"><i class="fas fa-money-check-dollar"></i> Pay All Owners</button>
+      </div>
+    </div>
+    
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-coins"></i></div>
+        <div><div class="stat-val" id="settleTotalRevenue">₹0</div><div class="stat-label">Total Ticket Sales</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-percent"></i></div>
+        <div>
+          <div class="stat-val" id="settleTotalCommission">₹0</div>
+          <div class="stat-label">
+            Total BusFlux Commission 
+            <span id="commissionRateDisplay" style="color:var(--primary); font-weight:700">(...)</span>
+            <button onclick="editCommissionRate()" style="background:none;border:none;color:var(--muted);cursor:pointer;margin-left:5px" title="Edit Commission Rate">
+              <i class="fas fa-edit"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-money-bill-wave"></i></div>
+        <div><div class="stat-val" id="settleTotalPayable">₹0</div><div class="stat-label">Total Payable to Owners</div></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Owner Name</th>
+            <th>Tickets Sold</th>
+            <th>Total Sales</th>
+            <th>Commission</th>
+            <th>Payable Amount</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="settlementsBody">
+          <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Loading settlements...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Settlement History -->
+    <div id="settlementHistorySection" style="display: none;">
+      <div class="sec-head" style="margin-top: 40px;">
+        <h2><i class="fas fa-history" style="color:var(--primary);margin-right:8px"></i>Settlement History</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Bus Name</th>
+              <th>Month</th>
+              <th>Total Sales</th>
+              <th>Commission</th>
+              <th>Paid Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="settlementHistoryBody">
+            <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">Loading history...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PLATFORM COMMISSION (PROFIT) ── -->
+  <div class="page" id="page-profit">
+    <div class="sec-head" style="flex-wrap: wrap; gap: 15px;">
+      <div>
+        <h2><i class="fas fa-chart-line" style="color:var(--primary);margin-right:8px"></i>Platform Commission</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 5px;" id="profitTotalCommissionThisMonth">Total for selected month: ₹0</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="month" id="profitMonthFilter" class="f-group input" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text);" onchange="filterProfitHistory()">
+        <button class="btn-add" onclick="fetchProfitHistory()"><i class="fas fa-sync"></i> Refresh</button>
+      </div>
+    </div>
+    
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date Settled</th>
+            <th>Bus Name</th>
+            <th>Bus Number</th>
+            <th>Total Sales</th>
+            <th>Commission Earned</th>
+          </tr>
+        </thead>
+        <tbody id="profitHistoryBody">
+          <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">Loading platform profit history...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -736,6 +874,36 @@
   </div>
 </div>
 
+<!-- ── SETTLEMENT DETAILS MODAL ── -->
+<div class="modal-overlay" id="settlementDetailsModal">
+  <div class="modal" style="max-width:1300px; width: 98%;">
+    <div class="modal-head">
+      <h3><i class="fas fa-list-ul" style="color:var(--primary);margin-right:8px"></i><span id="sd_modalTitle">Transactions</span></h3>
+      <button class="modal-close" onclick="closeSettlementDetailsModal()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="table-wrap" style="max-height:400px;overflow-y:auto;margin:20px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Ticket ID</th>
+            <th>Passenger</th>
+            <th>Route</th>
+            <th>Conductor</th>
+            <th>Seats</th>
+            <th>Ticket Amt</th>
+            <th>Commission</th>
+            <th>Payable</th>
+          </tr>
+        </thead>
+        <tbody id="sd_tbody">
+          <tr><td colspan="9" style="text-align:center;padding:20px;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div id="toastContainer"></div>
 
 <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
@@ -776,6 +944,8 @@ function checkAuth() {
     loadConductors();
     loadBookings();
     loadTransactions();
+    fetchSettlementsDashboard();
+    fetchProfitHistory();
     const savedPage = sessionStorage.getItem("adminCurrentPage") || "dashboard";
     showPage(savedPage);
   }
@@ -797,7 +967,7 @@ async function adminLogin() {
       document.getElementById("adminPassword").value = "";
       document.getElementById("loginScreen").style.display = "none";
       toast("Welcome back, " + (data.name||"Admin"), "success");
-      loadDashboard(); loadBuses(); loadUsers(); loadConductors(); loadBookings(); loadTransactions(); fetchAdminNotifications();
+      loadDashboard(); loadBuses(); loadUsers(); loadConductors(); loadBookings(); loadTransactions(); fetchSettlementsDashboard(); fetchProfitHistory(); fetchAdminNotifications();
       const savedPage = sessionStorage.getItem("adminCurrentPage") || "dashboard";
       showPage(savedPage);
     } else {
@@ -854,6 +1024,8 @@ async function loadDashboard() {
     document.getElementById("sTotalBookings").textContent   = data.totalBookings ?? "--";
     document.getElementById("sTotalRevenue").textContent    = data.totalRevenue ? "₹" + data.totalRevenue.toLocaleString() : "₹0";
     document.getElementById("sTotalConductors").textContent = data.totalConductors ?? "--";
+    const profitEl = document.getElementById("sTotalAdminProfit");
+    if (profitEl) profitEl.textContent = data.totalAdminProfit ? "₹" + data.totalAdminProfit.toLocaleString() : "₹0";
 
     // Age group cards
     const colors = ["purple","green","orange","blue","pink","teal"];
@@ -1246,9 +1418,23 @@ function renderBookingsTable(bookings) {
 async function loadTransactions() {
   try {
     const res = await fetch(`${API}/admin/transactions`, { headers:{ Authorization:`Bearer ${adminToken}` }});
-    const transactions = await res.json();
+    let transactions = await res.json();
+    transactions = transactions.filter(t => t.userId && t.userId.name && t.userId.name.trim() !== "");
+    
     const tbody = document.getElementById("transactionsBody");
-    if (!transactions.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No transactions found</td></tr>`; return; }
+    const totalBadge = document.getElementById("totalWalletRecharges");
+
+    if (!transactions.length) { 
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No transactions found</td></tr>`; 
+      if(totalBadge) totalBadge.style.display = 'none';
+      return; 
+    }
+    
+    const totalAmount = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    if(totalBadge) {
+      totalBadge.textContent = `Total Recharged: ₹${totalAmount.toLocaleString('en-IN')}`;
+      totalBadge.style.display = 'inline-block';
+    }
     
     tbody.innerHTML = transactions.map(t => {
       const date = new Date(t.createdAt).toLocaleString("en-IN", {
@@ -1276,6 +1462,48 @@ async function loadTransactions() {
       </tr>`;
     }).join("");
   } catch(e) { console.error("Error loading transactions:", e); }
+}
+
+function filterTransactions() {
+  const input = document.getElementById("transactionFilter");
+  const filter = input.value.toLowerCase();
+  
+  const dateInput = document.getElementById("transactionDateFilter");
+  let filterDateStr = "";
+  if (dateInput && dateInput.value) {
+    const parts = dateInput.value.split("-");
+    const y = parts[0];
+    const m = parts[1];
+    const d = parts[2];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthStr = monthNames[parseInt(m, 10) - 1];
+    filterDateStr = `${d} ${monthStr} ${y}`.toLowerCase();
+  }
+  
+  const tbody = document.getElementById("transactionsBody");
+  const trs = tbody.getElementsByTagName("tr");
+  
+  for (let i = 0; i < trs.length; i++) {
+    const tds = trs[i].getElementsByTagName("td");
+    if (tds.length === 1) continue; // Skip loading or 'no transactions' row
+    
+    let textMatch = false;
+    for (let j = 0; j <= 3; j++) {
+      if (tds[j] && tds[j].innerText.toLowerCase().indexOf(filter) > -1) {
+        textMatch = true;
+        break;
+      }
+    }
+    
+    let dateMatch = true;
+    if (filterDateStr) {
+      if (tds[0] && tds[0].innerText.toLowerCase().indexOf(filterDateStr) === -1) {
+        dateMatch = false;
+      }
+    }
+    
+    trs[i].style.display = (textMatch && dateMatch) ? "" : "none";
+  }
 }
 
 // ── Bus Modal ──
@@ -1514,11 +1742,19 @@ function renderConductorsGrid() {
         ? `<span class="badge badge-teal" style="margin-top:6px"><i class="fas fa-bus" style="font-size:.65rem;margin-right:4px"></i>${assignedBus.busName}</span>`
         : `<span class="badge badge-orange" style="margin-top:6px"><i class="fas fa-bus" style="font-size:.65rem;margin-right:4px"></i>No Assigned Bus</span>`;
 
+      const isOnline = window.onlineUserIds && window.onlineUserIds.has(c._id);
+      const statusDot = isOnline 
+        ? `<div style="position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--success);border:2px solid var(--card-bg);border-radius:50%;z-index:2;" title="Online (${c._id})"></div>`
+        : `<div style="position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--danger);border:2px solid var(--card-bg);border-radius:50%;z-index:2;" title="Offline (${c._id})"></div>`;
+
       return `
         <div class="user-card">
-          ${c.userPhoto
-            ? `<img class="uc-avatar" src="${getImageUrl(c.userPhoto)}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="">`
-            : `<div class="uc-avatar" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;background:rgba(168,85,247,.15);color:#a855f7">${(c.name||'C')[0].toUpperCase()}</div>`}
+          <div style="position:relative;display:inline-block;flex-shrink:0;">
+            ${c.userPhoto
+              ? `<img class="uc-avatar" src="${getImageUrl(c.userPhoto)}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="">`
+              : `<div class="uc-avatar" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;background:rgba(168,85,247,.15);color:#a855f7">${(c.name||'C')[0].toUpperCase()}</div>`}
+            ${statusDot}
+          </div>
           <div class="uc-info">
             <div class="uc-name">${c.name||'"”'}</div>
             <div class="uc-email">${c.email}</div>
@@ -1806,6 +2042,15 @@ if (socket && statusBadge) {
   });
 }
 
+window.onlineUserIds = new Set();
+socket.on('online_users_update', (usersArray) => {
+  window.onlineUserIds = new Set(usersArray);
+  console.log("online_users_update:", usersArray);
+  const dbg = document.getElementById("debugOnlineUsers");
+  if (dbg) dbg.innerText = "Online: " + JSON.stringify(usersArray);
+  renderConductorsGrid();
+});
+
 // ================= THEME TOGGLE =================
 function initTheme() {
   const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -1828,6 +2073,467 @@ function toggleTheme() {
     void icon.offsetWidth; // trigger reflow
     icon.className = newTheme === 'light' ? 'fas fa-sun theme-icon spin' : 'fas fa-moon theme-icon spin';
     icon.style.color = newTheme === 'light' ? '#f59e0b' : '#6366f1';
+  }
+}
+
+// ── SETTLEMENTS ──
+async function fetchSettlementsDashboard() {
+  if (!adminToken) return;
+  try {
+    const res = await fetch(`${API}/settlement/dashboard`, {
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.currentPendingSettlements = data.data.ownerStats;
+      try {
+        const setRes = await fetch(`${API}/settings/commissionPercentage`);
+        if (setRes.ok) {
+          const setData = await setRes.json();
+          document.getElementById('commissionRateDisplay').innerText = `(${setData.value || 10}%)`;
+        } else {
+          document.getElementById('commissionRateDisplay').innerText = `(10%)`;
+        }
+      } catch(e) { console.error(e); }
+
+      document.getElementById('settleTotalRevenue').innerText = `₹${data.data.totalRevenue}`;
+      document.getElementById('settleTotalCommission').innerText = `₹${data.data.totalCommission}`;
+      document.getElementById('settleTotalPayable').innerText = `₹${data.data.totalPayable}`;
+      
+      const tbody = document.getElementById('settlementsBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (data.data.ownerStats.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">No pending settlements</td></tr>`;
+      } else {
+        data.data.ownerStats.forEach(stat => {
+          tbody.innerHTML += `
+            <tr>
+              <td>
+                <div style="font-weight:600">${stat.ownerName || 'Unknown Owner'}</div>
+                ${stat.bankDetails ? `
+                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;">
+                    ${stat.bankDetails.bankName ? `<strong>Bank:</strong> ${stat.bankDetails.bankName}<br>` : ''}
+                    ${stat.bankDetails.accountNumber ? `<strong>A/C:</strong> ${stat.bankDetails.accountNumber}<br>` : ''}
+                    ${stat.bankDetails.ifscCode ? `<strong>IFSC:</strong> ${stat.bankDetails.ifscCode}<br>` : ''}
+                    ${stat.bankDetails.upiId ? `<strong>UPI:</strong> ${stat.bankDetails.upiId}` : ''}
+                  </div>
+                ` : `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">No Bank Info</div>`}
+              </td>
+              <td>${stat.ticketsSold}</td>
+              <td>₹${stat.totalSales}</td>
+              <td style="color:var(--warning)">₹${stat.commission}</td>
+              <td style="color:var(--success); font-weight:700">₹${stat.payableAmount}</td>
+              <td style="display: flex; gap: 8px;">
+                <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--primary-light); color: var(--primary); width: auto; min-width: 80px;" onclick="viewSettlementDetails('${stat.busId}', '${stat.ownerName}')">
+                  <i class="fas fa-eye"></i> View
+                </button>
+                <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success-light); color: var(--success); width: auto; min-width: 90px;" onclick="downloadSettlementCSV('${stat.busId}', '${stat.ownerName}')">
+                  <i class="fas fa-download"></i> Download
+                </button>
+                <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success); color: white; width: auto; min-width: 80px;" onclick="generateSingleSettlement('${stat.busId}', '${stat.ownerName}')">
+                  <i class="fas fa-money-check-dollar"></i> Pay
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+    }
+    
+    // Fetch History as well
+    fetchSettlementHistory();
+  } catch (err) {
+    console.error("Error fetching settlements:", err);
+  }
+}
+
+let allProfitHistory = [];
+
+async function fetchProfitHistory() {
+  if (!adminToken) return;
+  try {
+    const res = await fetch(`${API}/admin/profit-history`, {
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      allProfitHistory = data.data;
+      
+      const filterInput = document.getElementById('profitMonthFilter');
+      if (!filterInput.value) {
+        const now = new Date();
+        filterInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      }
+      filterProfitHistory();
+    }
+  } catch (err) {
+    console.error("Error fetching profit history:", err);
+  }
+}
+
+function filterProfitHistory() {
+  const tbody = document.getElementById("profitHistoryBody");
+  if (!tbody) return;
+  
+  const filterInput = document.getElementById('profitMonthFilter').value;
+  let filteredData = allProfitHistory;
+  
+  if (filterInput) {
+    const [year, month] = filterInput.split('-');
+    filteredData = allProfitHistory.filter(tx => {
+      const d = new Date(tx.updatedAt);
+      return d.getFullYear() === parseInt(year) && (d.getMonth() + 1) === parseInt(month);
+    });
+  }
+  
+  let totalThisMonth = 0;
+  tbody.innerHTML = '';
+  
+  if (filteredData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">No platform profit history found for selected month</td></tr>`;
+  } else {
+    filteredData.forEach(tx => {
+      totalThisMonth += (tx.commissionAmount || 0);
+      const dateStr = new Date(tx.updatedAt).toLocaleDateString();
+      const busName = tx.busId ? (tx.busId.busName || tx.busId.name) : 'Unknown Bus';
+      const busNum = tx.busId ? tx.busId.busNumber : 'N/A';
+      tbody.innerHTML += `
+        <tr>
+          <td>${dateStr}</td>
+          <td>${busName}</td>
+          <td><span class="badge" style="background:var(--bg-body);color:var(--text);">${busNum}</span></td>
+          <td style="font-weight:600">₹${tx.ticketAmount || 0}</td>
+          <td style="font-weight:700;color:var(--success)">+₹${tx.commissionAmount || 0}</td>
+        </tr>
+      `;
+    });
+  }
+  document.getElementById('profitTotalCommissionThisMonth').innerText = `Total for selected month: ₹${totalThisMonth}`;
+}
+
+async function fetchSettlementHistory() {
+  if (!adminToken) return;
+  try {
+    const res = await fetch(`${API}/settlement/history`, {
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    const tbody = document.getElementById('settlementHistoryBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    if (data.success && data.data && data.data.length > 0) {
+      data.data.forEach(item => {
+        const date = new Date(item.createdAt).toLocaleDateString('en-IN', {
+          year: 'numeric', month: 'short', day: 'numeric',
+          hour: '2-digit', minute:'2-digit'
+        });
+        const busName = item.busId ? item.busId.busName : 'Unknown Bus';
+        
+        tbody.innerHTML += `
+          <tr>
+            <td>${date}</td>
+            <td><div style="font-weight:600">${busName}</div></td>
+            <td><span class="status-badge" style="background:var(--primary);color:#fff">${item.month}</span></td>
+            <td>₹${item.totalSales}</td>
+            <td style="color:var(--warning)">₹${item.commission}</td>
+            <td style="color:var(--success); font-weight:700">₹${item.payableAmount}</td>
+            <td><span class="status-badge" style="background:var(--success);color:#fff">${item.paymentStatus}</span></td>
+            <td>
+              <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success-light); color: var(--success); width: auto; min-width: 90px;" onclick="downloadHistoricalSummary('${busName}', '${item.month}', '${item.totalSales}', '${item.commission}', '${item.payableAmount}', '${date}')">
+                <i class="fas fa-download"></i> Download
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+    } else {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No settlement history available</td></tr>`;
+    }
+  } catch(e) {
+    console.error("Error fetching settlement history:", e);
+  }
+}
+
+function toggleSettlementHistory() {
+  const section = document.getElementById('settlementHistorySection');
+  if (section.style.display === 'none' || section.style.display === '') {
+    section.style.display = 'block';
+    // Scroll smoothly to it
+    setTimeout(() => {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+function downloadHistoricalSummary(busName, month, totalSales, commission, paidAmount, dateStr) {
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "Date Generated,Bus Name,Settlement Month,Total Sales,Commission,Paid Amount\n";
+  
+  const safeBusName = `"${busName}"`;
+  csvContent += `"${dateStr}",${safeBusName},"${month}",${totalSales},${commission},${paidAmount}\n`;
+  
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  const safeMonth = month.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  link.setAttribute("download", `Settlement_Summary_${busName.replace(/\\s+/g, '_')}_${safeMonth}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast("Summary downloaded!", "success");
+}
+
+async function editCommissionRate() {
+  const newRate = prompt("Enter new commission percentage (e.g. 10):");
+  if (newRate === null || newRate.trim() === "") return;
+  const rate = parseFloat(newRate);
+  if (isNaN(rate) || rate < 0 || rate > 100) {
+    alert("Please enter a valid percentage between 0 and 100.");
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/settings/commission-rate`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${adminToken}` },
+      body: JSON.stringify({ rate })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      toast("Commission rate updated!", "success");
+      document.getElementById('commissionRateDisplay').innerText = `(${data.value}%)`;
+      fetchSettlementsDashboard();
+    } else {
+      toast(data.message || "Failed to update", "error");
+    }
+  } catch(e) {
+    toast("Network error", "error");
+  }
+}
+
+async function generateSettlement() {
+  if (!adminToken) return;
+  
+  if (window.currentPendingSettlements && window.currentPendingSettlements.length > 0) {
+    const missingBankDetails = window.currentPendingSettlements.filter(stat => {
+      if (!stat.bankDetails) return true;
+      const bd = stat.bankDetails;
+      const hasUpi = !!bd.upiId;
+      const hasBank = bd.bankName && bd.accountNumber && bd.ifscCode;
+      return !hasUpi && !hasBank;
+    });
+
+    if (missingBankDetails.length > 0) {
+      const names = missingBankDetails.map(s => s.ownerName || 'Unknown Owner').join(", ");
+      const wantToRemind = confirm(`Cannot generate settlement!\n\nThe following buses are missing bank or UPI details:\n- ${names}\n\nWould you like to send an automatic notification to their conductors right now to remind them to fill in their Payout/Bank Details?`);
+      
+      if (wantToRemind) {
+        let sent = 0;
+        for (let stat of missingBankDetails) {
+          if (stat.conductorId) {
+            try {
+              await fetch(`${API}/admin/remind-bank-details/${stat.conductorId}`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${adminToken}` }
+              });
+              sent++;
+            } catch(e) { console.error("Error sending reminder:", e); }
+          }
+        }
+        toast(`Sent ${sent} reminder notification(s) to conductors!`, "success");
+      }
+      return;
+    }
+  }
+
+  if (!confirm("Are you sure you want to generate settlement and mark all pending owner earnings as Paid?")) return;
+  
+  try {
+    const res = await fetch(`${API}/settlement/generate`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast("Settlement Generated successfully!", "success");
+      fetchSettlementsDashboard();
+    } else {
+      toast(data.message || "Failed to generate settlement", "error");
+    }
+  } catch (err) {
+    console.error("Error generating settlement:", err);
+    toast("Network error while generating settlement", "error");
+  }
+}
+
+async function generateSingleSettlement(busId, ownerName) {
+  if (!adminToken) return;
+  
+  if (window.currentPendingSettlements) {
+    const stat = window.currentPendingSettlements.find(s => s.busId === busId);
+    if (stat && (!stat.bankDetails || (!stat.bankDetails.upiId && (!stat.bankDetails.bankName || !stat.bankDetails.accountNumber)))) {
+      const wantToRemind = confirm(`Cannot generate settlement!\n\n${ownerName || 'This owner'} is missing bank or UPI details.\n\nWould you like to send an automatic notification to the conductor right now to remind them to fill in their Payout/Bank Details?`);
+      
+      if (wantToRemind && stat.conductorId) {
+        try {
+          await fetch(`${API}/admin/remind-bank-details/${stat.conductorId}`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${adminToken}` }
+          });
+          toast(`Sent reminder notification to ${ownerName}'s conductor!`, "success");
+        } catch(e) { console.error("Error sending reminder:", e); }
+      }
+      return;
+    }
+  }
+
+  if (!confirm(`Are you sure you want to generate settlement and mark pending earnings as Paid for ${ownerName}?`)) return;
+  
+  try {
+    const res = await fetch(`${API}/settlement/generate/${busId}`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast(`Settlement Generated for ${ownerName}!`, "success");
+      fetchSettlementsDashboard();
+    } else {
+      toast(data.message || "Failed to generate settlement", "error");
+    }
+  } catch (err) {
+    console.error("Error generating single settlement:", err);
+    toast("Network error while generating settlement", "error");
+  }
+}
+
+function closeSettlementDetailsModal() {
+  document.getElementById('settlementDetailsModal').classList.remove('open');
+}
+
+async function viewSettlementDetails(busId, ownerName) {
+  if (!adminToken) return;
+  document.getElementById('sd_modalTitle').innerText = `Transactions for ${ownerName}`;
+  document.getElementById('settlementDetailsModal').classList.add('open');
+  const tbody = document.getElementById('sd_tbody');
+  tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">Loading...</td></tr>';
+  
+  try {
+    const res = await fetch(`${API}/settlement/transactions/${busId}`, {
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      tbody.innerHTML = '';
+      if (data.transactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No transactions found</td></tr>';
+      } else {
+        data.transactions.forEach(tx => {
+          const dateStr = new Date(tx.bookingDate).toLocaleString();
+          let passengerName = 'N/A';
+          let seats = '-';
+          let ticketId = '-';
+          let route = 'N/A';
+          let conductorName = 'Online/Self';
+
+          if (tx.bookingId) {
+             passengerName = (tx.bookingId.userId && tx.bookingId.userId.name) ? tx.bookingId.userId.name : 'Guest / Unknown';
+             seats = tx.bookingId.seatsBooked || '-';
+             ticketId = tx.bookingId._id ? tx.bookingId._id.toString().slice(-8).toUpperCase() : '-';
+             route = `${tx.bookingId.boardingPoint || 'Unknown'} ➔ ${tx.bookingId.droppingPoint || 'Unknown'}`;
+             
+             if (tx.bookingId.scannedBy && tx.bookingId.scannedBy.name) {
+               conductorName = tx.bookingId.scannedBy.name;
+             }
+          }
+
+          tbody.innerHTML += `
+            <tr>
+              <td><div style="font-size:0.85rem;color:var(--muted)">${dateStr}</div></td>
+              <td><div style="font-weight:700; color:var(--primary)">#${ticketId}</div></td>
+              <td><div style="font-weight:600">${passengerName}</div></td>
+              <td><div style="font-size:0.85rem">${route}</div></td>
+              <td><div style="font-weight:500">${conductorName}</div></td>
+              <td><span class="badge badge-blue" style="font-size:0.8rem">${seats}</span></td>
+              <td>₹${tx.ticketAmount}</td>
+              <td style="color:var(--warning)">₹${tx.commissionAmount}</td>
+              <td style="color:var(--success); font-weight:700">₹${tx.ownerAmount}</td>
+            </tr>
+          `;
+        });
+      }
+    } else {
+      toast("Failed to load details", "error");
+    }
+  } catch (err) {
+    console.error(err);
+    toast("Network error loading details", "error");
+  }
+}
+
+async function downloadSettlementCSV(busId, ownerName) {
+  if (!adminToken) return;
+  toast("Generating CSV...", "success");
+  try {
+    const res = await fetch(`${API}/settlement/transactions/${busId}`, {
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (data.transactions.length === 0) {
+        toast("No transactions to download", "warning");
+        return;
+      }
+      
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Date,Time,Ticket ID,Passenger,Route,Conductor,Seats,Ticket Amt,Commission,Payable\n";
+      
+      data.transactions.forEach(tx => {
+        const dateObj = new Date(tx.bookingDate);
+        const dateStr = dateObj.toLocaleDateString();
+        const timeStr = dateObj.toLocaleTimeString();
+        
+        let passengerName = 'Guest / Unknown';
+        let seats = '-';
+        let ticketId = '-';
+        let route = 'Unknown ➔ Unknown';
+        let conductorName = 'Online/Self';
+        
+        if (tx.bookingId) {
+           passengerName = (tx.bookingId.userId && tx.bookingId.userId.name) ? tx.bookingId.userId.name : 'Guest / Unknown';
+           seats = tx.bookingId.seatsBooked || '-';
+           ticketId = tx.bookingId._id ? tx.bookingId._id.toString().slice(-8).toUpperCase() : '-';
+           route = `${tx.bookingId.boardingPoint || 'Unknown'} -> ${tx.bookingId.droppingPoint || 'Unknown'}`;
+           if (tx.bookingId.scannedBy && tx.bookingId.scannedBy.name) {
+             conductorName = tx.bookingId.scannedBy.name;
+           }
+        }
+        
+        // Escape commas in strings for CSV
+        const safePassenger = `"${passengerName}"`;
+        const safeRoute = `"${route}"`;
+        const safeConductor = `"${conductorName}"`;
+        
+        csvContent += `${dateStr},${timeStr},${ticketId},${safePassenger},${safeRoute},${safeConductor},${seats},${tx.ticketAmount},${tx.commissionAmount},${tx.ownerAmount}\n`;
+      });
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Settlement_${ownerName.replace(/\\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } else {
+      toast("Failed to load details for CSV", "error");
+    }
+  } catch (err) {
+    console.error(err);
+    toast("Network error generating CSV", "error");
   }
 }
 

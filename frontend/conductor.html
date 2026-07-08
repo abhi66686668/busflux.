@@ -112,13 +112,13 @@
     .menu-link {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 12px 16px;
+      gap: 12px;
+      padding: 10px 14px;
       color: var(--text-sidebar);
       text-decoration: none;
       font-weight: 500;
       font-size: 0.95rem;
-      border-radius: var(--radius);
+      border-radius: 8px;
       transition: var(--transition);
       cursor: pointer;
       border: none;
@@ -126,12 +126,30 @@
       width: 100%;
       text-align: left;
     }
-    .menu-link:hover, .menu-link.active {
-      background-color: #333a48;
+    .menu-link:hover {
+      background-color: #273142;
       color: #fff;
     }
-    .menu-link.active i { color: var(--primary); }
-    .menu-link i { font-size: 1.15rem; color: #8a99ad; transition: var(--transition); }
+    .menu-link.active {
+      background-color: #2e3a50;
+      color: #fff;
+      font-weight: 600;
+    }
+    .menu-link i {
+      font-size: 1.1rem;
+      color: #8a99ad;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+    .menu-link.active i {
+      background-color: var(--primary);
+      color: #fff;
+    }
 
     /* ── MAIN CONTENT CONTAINER ── */
     main {
@@ -182,6 +200,7 @@
     .user-profile-menu {
       display: flex; align-items: center; gap: 12px;
       padding-left: 20px; border-left: 1px solid var(--border-color);
+      cursor: pointer;
     }
     .user-profile-menu .info { text-align: right; }
     .user-profile-menu .info .name { font-size: 0.9rem; font-weight: 700; }
@@ -389,6 +408,64 @@
       .user-profile-menu .info { display: none !important; }
       .user-profile-menu { padding-left: 10px; }
       .header-right { gap: 14px; }
+      
+      /* Bottom Navigation for Mobile */
+      .sidebar-toggle { display: none !important; }
+      aside {
+        transform: none !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        top: auto;
+        width: 100%;
+        height: 65px;
+        min-height: 65px;
+        flex-direction: row;
+        z-index: 1000;
+        border-top: 1px solid var(--border);
+        background: var(--bg-sidebar);
+        padding: 0;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+        transition: none;
+      }
+      .sidebar-logo { display: none !important; }
+      .sidebar-menu { 
+        flex-direction: row; 
+        padding: 0 5px; 
+        gap: 5px;
+        width: 100%;
+        justify-content: flex-start;
+        align-items: center;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+      .sidebar-menu::-webkit-scrollbar { display: none; } /* Hide scrollbar */
+      .sidebar-menu > div { display: contents; }
+      .menu-group-title { display: none !important; }
+      .menu-links { display: contents; }
+      .menu-links li { display: contents; }
+      .menu-link {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 8px 10px;
+        gap: 4px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-align: center;
+        border-radius: 8px;
+        background: transparent !important;
+        min-width: 75px;
+        margin-bottom: 0;
+      }
+      .menu-link.active {
+        color: var(--primary) !important;
+      }
+      .menu-link i { font-size: 1.3rem; margin: 0; width: auto; color: inherit; }
+      main {
+        margin-bottom: 65px;
+      }
     }
 
     @media (max-width: 640px) {
@@ -669,7 +746,7 @@
   </div>
 
 
-  <!-- â•â•â•â•â•â•â•â•â•â• COLLAPSIBLE SIDEBAR â•â•â•â•â•â•â•â•â•â• -->
+  <!-- ━━━━━━━━━━ COLLAPSIBLE SIDEBAR ━━━━━━━━━━ -->
   <aside id="sidebar">
     <div class="sidebar-logo">
       <i class="fas fa-bus-alt"></i>
@@ -686,6 +763,12 @@
               Dashboard
             </button>
           </li>
+          <li>
+            <button class="menu-link" onclick="switchTab('tracking', this)" id="linkTracking">
+              <i class="fas fa-location-arrow"></i>
+              Live Tracking
+            </button>
+          </li>
         </ul>
       </div>
 
@@ -699,15 +782,15 @@
             </button>
           </li>
           <li>
-            <button class="menu-link" onclick="switchTab('scan-ticket', this)" id="linkScanTicket">
-              <i class="fas fa-ticket"></i>
-              Confirm Booking (Scan QR)
-            </button>
-          </li>
-          <li>
             <button class="menu-link" onclick="switchTab('history', this)" id="linkHistory">
               <i class="fas fa-clock-rotate-left"></i>
               History Log
+            </button>
+          </li>
+          <li>
+            <button class="menu-link" onclick="switchTab('settlements', this)" id="linkSettlements">
+              <i class="fas fa-money-check-dollar"></i>
+              Settlements
             </button>
           </li>
         </ul>
@@ -766,7 +849,7 @@
           </div>
         </div>
         
-        <div class="user-profile-menu">
+        <div class="user-profile-menu" onclick="switchTab('profile', document.getElementById('linkProfile'))">
           <div class="info">
             <div class="name" id="cName">Conductor</div>
             <div class="role" id="cEmail">Staff</div>
@@ -782,7 +865,33 @@
     <div class="content-container">
 
       <!-- ── PAGE: DASHBOARD ── -->
-      <div class="dashboard-page active" id="page-dashboard">
+      
+      <div class="dashboard-page" id="page-tracking">
+        <h2>Live Bus Tracking</h2>
+        <div class="tracking-controls" style="background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+          <label>Select Bus:</label>
+          <select id="liveBusSelect" class="input-field"></select>
+          
+          <div style="margin-top: 20px;">
+            <button id="startJourneyBtn" class="btn-action" onclick="toggleJourney()">
+              <i class="fas fa-play"></i> Start Journey
+            </button>
+            <span id="journeyStatus" style="margin-left: 15px; font-weight: bold;">Status: Not Started</span>
+          </div>
+
+          <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <label>Jump to Stop:</label>
+            <select id="manualNextStop" class="input-field" style="width: 250px; display: inline-block;">
+              <option value="">Start journey first...</option>
+            </select>
+            <button class="btn-action" onclick="updateNextStop()" style="display: inline-block; width: auto; margin-left: 10px;">
+              Jump to Stop
+            </button>
+          </div>
+        </div>
+      </div>
+
+<div class="dashboard-page active" id="page-dashboard">
         <!-- Stats Widgets -->
         <div class="stats-grid">
           <div class="stats-card">
@@ -815,6 +924,32 @@
               <div class="val" id="statRatio">0%</div>
               <div class="lbl">Success Ratio</div>
               <div class="stats-trend up"><i class="fas fa-check"></i> High</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settlement Dues Section -->
+        <h3 style="margin: 20px 0 10px; font-size: 1.1rem; color: var(--text);">Pending Settlement Dues</h3>
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
+          <div class="stats-card">
+            <div class="stats-icon blue"><i class="fas fa-hand-holding-dollar"></i></div>
+            <div class="stats-info">
+              <div class="val" id="dueTotalCollected">₹0</div>
+              <div class="lbl">Total Collected</div>
+            </div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-icon green"><i class="fas fa-bus"></i></div>
+            <div class="stats-info">
+              <div class="val" id="dueOwner">₹0</div>
+              <div class="lbl">Owed to Bus Owner</div>
+            </div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-icon red"><i class="fas fa-building"></i></div>
+            <div class="stats-info">
+              <div class="val" id="dueAdmin">₹0</div>
+              <div class="lbl">Owed to BusFlux</div>
             </div>
           </div>
         </div>
@@ -919,15 +1054,7 @@
                   <input type="file" id="qrFileInput" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
                 </div>
 
-                <div style="text-align: center; color: var(--text-muted); font-size: 0.78rem; font-weight: 700; margin-bottom: 18px; position: relative;">
-                  <span style="background-color: var(--bg-card); padding: 0 10px; position: relative; z-index: 2;">OR ENTER PASSENGER EMAIL MANUALLY</span>
-                  <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid var(--border-color); z-index: 1;">
-                </div>
 
-                <div style="display: flex; gap: 10px;">
-                  <input type="text" id="manualEmail" placeholder="Enter passenger email (e.g. user@gmail.com)">
-                  <button class="btn-action" id="manualSubmitBtn" onclick="verifyPassengerEmail()" style="width: auto; padding: 0 28px; height: 46px;">Issue</button>
-                </div>
               </div>
             </div>
 
@@ -1011,16 +1138,7 @@
                 </div>
               </div>
 
-              <!-- Status filter dropdown -->
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <label for="historyStatusFilter" style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Status:</label>
-                <select id="historyStatusFilter" onchange="applyHistoryFilters()" style="width: auto; padding: 6px 12px; font-size: 0.88rem; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); outline: none;">
-                  <option value="all">All</option>
-                  <option value="paid">Paid</option>
-                  <option value="failed">Declined</option>
-                  <option value="refunded">Refunded</option>
-                </select>
-              </div>
+
 
               <!-- Date picker input -->
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -1040,13 +1158,49 @@
                   <th>Ticket ID</th>
                   <th>Price</th>
                   <th>Status</th>
-                  <th>Action</th>
                 </tr>
               </thead>
               <tbody id="historyTableBody">
                 <tr>
-                  <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fas fa-spinner fa-spin" style="margin-right: 6px;"></i> Loading logs...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: SETTLEMENTS ── -->
+      <div class="dashboard-page" id="page-settlements">
+        <div class="table-card">
+          <div class="table-header" style="flex-wrap: wrap; gap: 15px;">
+            <div>
+              <h3>Settlements</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">View history of settlements paid by admin.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn-action" onclick="downloadConductorSettlements()"><i class="fas fa-download"></i> Download CSV</button>
+              <button class="btn-action" onclick="loadConductorSettlements()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>BUS</th>
+                  <th>TOTAL SALES</th>
+                  <th>COMMISSION</th>
+                  <th>PAYABLE (PAID)</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="conductorSettlementsTable">
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 6px;"></i> Loading settlements...
                   </td>
                 </tr>
               </tbody>
@@ -1098,17 +1252,67 @@
                   <input type="number" id="profileExperience" min="0" max="60" placeholder="e.g. 5" style="width: 100%; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none;">
                 </div>
 
-                <div class="form-group" style="grid-column: span 2;">
-                  <label style="font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.85rem; color: var(--text-muted);">Phone Number</label>
-                  <input type="text" id="profilePhone" placeholder="e.g. +91 9876543210" style="width: 100%; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none;">
-                </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label style="font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.85rem; color: var(--text-muted);">Phone Number</label>
+                <input type="text" id="profilePhone" placeholder="e.g. +91 9876543210" style="width: 100%; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none;">
               </div>
+
+              <!-- Bank Details Divider -->
+              <div style="grid-column: span 2; padding-top: 15px; margin-top: 10px; border-top: 1px dashed var(--border-color);">
+                <h4 style="font-size: 0.95rem; color: var(--primary); margin: 0 0 5px 0;">Payout / Bank Details</h4>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 15px 0;">For receiving settlement payments from Admin.</p>
+              </div>
+
+              <div class="form-group">
+                <label style="font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.85rem; color: var(--text-muted);">Bank Name</label>
+                <select id="profileBankName" style="width: 100%; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none; appearance: none; cursor: pointer;">
+                  <option value="" disabled selected>Select your Bank</option>
+                  <option value="State Bank of India (SBI)">State Bank of India (SBI)</option>
+                  <option value="HDFC Bank">HDFC Bank</option>
+                  <option value="ICICI Bank">ICICI Bank</option>
+                  <option value="Axis Bank">Axis Bank</option>
+                  <option value="Kotak Mahindra Bank">Kotak Mahindra Bank</option>
+                  <option value="Punjab National Bank (PNB)">Punjab National Bank (PNB)</option>
+                  <option value="Bank of Baroda (BOB)">Bank of Baroda (BOB)</option>
+                  <option value="Canara Bank">Canara Bank</option>
+                  <option value="Union Bank of India">Union Bank of India</option>
+                  <option value="Bank of India">Bank of India</option>
+                  <option value="IndusInd Bank">IndusInd Bank</option>
+                  <option value="Yes Bank">Yes Bank</option>
+                  <option value="IDFC FIRST Bank">IDFC FIRST Bank</option>
+                  <option value="Federal Bank">Federal Bank</option>
+                  <option value="South Indian Bank">South Indian Bank</option>
+                  <option value="Indian Bank">Indian Bank</option>
+                  <option value="Central Bank of India">Central Bank of India</option>
+                  <option value="UCO Bank">UCO Bank</option>
+                  <option value="Bank of Maharashtra">Bank of Maharashtra</option>
+                  <option value="Other">Other Bank</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.85rem; color: var(--text-muted);">Account Number</label>
+                <input type="text" id="profileAccountNumber" placeholder="Account Number" maxlength="18" oninput="this.value = this.value.replace(/[^0-9]/g, '')" style="width: 100%; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none;">
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.85rem; color: var(--text-muted);">IFSC Code</label>
+                <input type="text" id="profileIfsc" placeholder="e.g. SBIN0001234" maxlength="11" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" style="width: 100%; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none;">
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.85rem; color: var(--text-muted);">UPI ID</label>
+                <input type="text" id="profileUpi" placeholder="e.g. name@upi" maxlength="50" style="width: 100%; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline: none;">
+              </div>
+            </div>
 
               <!-- Save Button -->
               <button class="btn-action" onclick="saveConductorProfile()" id="saveProfileBtn" style="background: linear-gradient(135deg, var(--primary), #80caee); font-weight: 700; margin-top: 10px;">
                 <i class="fas fa-save"></i> Save Profile Details
               </button>
               
+              <!-- Logout Button (Mobile Friendly) -->
+              <button class="btn-action" onclick="logout()" style="background: linear-gradient(135deg, var(--danger), #f43f5e); font-weight: 700; margin-top: 10px; width: 100%; border: none; padding: 12px; border-radius: var(--radius); color: white; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 1rem; transition: transform 0.2s;">
+                <i class="fas fa-right-from-bracket"></i> Log Out
+              </button>
+
               <!-- Result Alert Area -->
               <div id="profileAlertArea" style="width: 100%; display: none; text-align: center; font-size: 0.85rem; font-weight: 600; padding: 10px; border-radius: var(--radius);"></div>
 
@@ -1217,6 +1421,7 @@
 
   <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
   <script>
+
     const API = window.location.protocol === 'file:' ? ((window.location.protocol === "file:" ? "http://localhost:5000/api" : "/api") + "") : '/api';
     window.getImageUrl = function(path) {
       if (!path) return '';
@@ -1226,6 +1431,91 @@
     const token = localStorage.getItem("token");
     let buses = [];
     let conductorHistory = [];
+    let currentSettlementsData = [];
+    async function loadConductorSettlements() {
+      const tbody = document.getElementById("conductorSettlementsTable");
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading settlements...</td></tr>`;
+      
+      try {
+        const res = await fetch(`${API}/settlement/history`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          if (data.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">No settlements found.</td></tr>`;
+            currentSettlementsData = [];
+            return;
+          }
+          
+          currentSettlementsData = data.data;
+          tbody.innerHTML = data.data.map((s, index) => {
+            const dateStr = new Date(s.createdAt).toLocaleDateString();
+            const busName = s.busId ? `${s.busId.busName} (${s.busId.busNumber})` : "N/A";
+            
+            return `
+              <tr>
+                <td>${dateStr}</td>
+                <td><strong>${busName}</strong></td>
+                <td style="color:var(--success);">₹${s.totalSales}</td>
+                <td style="color:var(--danger);">-₹${s.commission}</td>
+                <td style="font-weight:700; color:var(--primary);">₹${s.payableAmount}</td>
+                <td>
+                  <button class="btn-action" style="padding: 5px 10px; font-size: 0.8rem;" onclick="downloadSpecificConductorSettlement(${index})">
+                    <i class="fas fa-download"></i>
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger); text-align:center; padding:30px;">${data.message || "Failed to load settlements."}</td></tr>`;
+        }
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger); text-align:center; padding:30px;">Network error.</td></tr>`;
+      }
+    }
+
+    function downloadConductorSettlements() {
+      if (!currentSettlementsData || currentSettlementsData.length === 0) {
+        alert("No data available to download.");
+        return;
+      }
+      let csvContent = "DATE,BUS,TOTAL SALES,COMMISSION,PAYABLE (PAID)\n";
+      currentSettlementsData.forEach(s => {
+        const dateStr = new Date(s.createdAt).toLocaleDateString();
+        const busName = s.busId ? `"${s.busId.busName} (${s.busId.busNumber})"` : "N/A";
+        csvContent += `${dateStr},${busName},₹${s.totalSales},-₹${s.commission},₹${s.payableAmount}\n`;
+      });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "settlements.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function downloadSpecificConductorSettlement(index) {
+      if (!currentSettlementsData || !currentSettlementsData[index]) return;
+      const s = currentSettlementsData[index];
+      let csvContent = "DATE,BUS,TOTAL SALES,COMMISSION,PAYABLE (PAID)\n";
+      const dateStr = new Date(s.createdAt).toLocaleDateString();
+      const busName = s.busId ? `"${s.busId.busName} (${s.busId.busNumber})"` : "N/A";
+      csvContent += `${dateStr},${busName},₹${s.totalSales},-₹${s.commission},₹${s.payableAmount}\n`;
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `settlement_${dateStr.replace(/\//g, '-')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     let allHistoryLogs = [];
     let currentPassenger = null;
 
@@ -1266,12 +1556,17 @@
             document.getElementById("profileAge").value = user.age || "";
             document.getElementById("profileExperience").value = user.experience || "";
             document.getElementById("profilePhone").value = user.phone || "";
+            document.getElementById("profileBankName").value = user.bankName || "";
+            document.getElementById("profileAccountNumber").value = user.accountNumber || "";
+            document.getElementById("profileIfsc").value = user.ifscCode || "";
+            document.getElementById("profileUpi").value = user.upiId || "";
             if (user.userPhoto) {
               document.getElementById("profilePreviewImg").src = `${window.getImageUrl(user.userPhoto)}`;
             }
             
             loadBusesList();
             refreshDashboardData();
+            fetchNotifications();
             addNotification("Conductor Connected", `Successfully authenticated as Conductor ${user.name || 'Staff'}.`, "success");
 
             // Initialize WebSockets
@@ -1280,8 +1575,11 @@
               const socket = io(SOCKET_URL);
               
               socket.on('connect', () => {
-                socket.emit('join_room', user._id);
-                console.log("WebSocket connected and joined room:", user._id);
+                const uid = user._id || user.id;
+                if (uid) {
+                  socket.emit('join_room', uid);
+                  console.log("WebSocket connected and joined room:", uid);
+                }
               });
               
               socket.on('new_notification', (notif) => {
@@ -1326,7 +1624,6 @@
 
     // Tab switcher
     function switchTab(tabId, el) {
-      localStorage.setItem("activeConductorTab", tabId);
       // Gracefully stop active camera scanner when switching tabs
       closeCameraScanner();
 
@@ -1344,6 +1641,10 @@
         document.getElementById("page-history").classList.add("active");
         document.getElementById("linkHistory").classList.add("active");
         loadHistoryTable();
+      } else if (tabId === 'settlements') {
+        document.getElementById("page-settlements").classList.add("active");
+        document.getElementById("linkSettlements").classList.add("active");
+        loadConductorSettlements();
       } else if (tabId === 'scan-ticket') {
         document.getElementById("page-scan-ticket").classList.add("active");
         document.getElementById("linkScanTicket").classList.add("active");
@@ -1351,11 +1652,25 @@
       } else if (tabId === 'profile') {
         document.getElementById("page-profile").classList.add("active");
         document.getElementById("linkProfile").classList.add("active");
+      } else if (tabId === 'tracking') {
+        document.getElementById("page-tracking").classList.add("active");
+        document.getElementById("linkTracking").classList.add("active");
       }
       
       // Close sidebar on mobile after clicking
       document.getElementById("sidebar").classList.remove("open");
+      
+      // Save active tab to localStorage
+      localStorage.setItem('activeConductorTab', tabId);
     }
+    
+    // Restore active tab on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTab = localStorage.getItem('activeConductorTab');
+      if (savedTab) {
+        switchTab(savedTab);
+      }
+    });
 
     // --- LIVE CAMERA QR CODE SCANNER UTILITIES ---
     function startCameraScanner(targetType) {
@@ -1495,19 +1810,30 @@
       try {
         const res = await fetch(`${API}/buses`);
         if (res.ok) {
-          buses = await res.json();
+          let allBuses = await res.json();
+          const cName = document.getElementById("cName").textContent;
+          if (cName && cName !== "Conductor") {
+             const assignedBus = allBuses.find(b => b.conductorName === cName);
+             if (assignedBus) buses = [assignedBus];
+             else buses = allBuses;
+          } else {
+             buses = allBuses;
+          }
+          
           const select = document.getElementById("busSelect");
           select.innerHTML = buses.map(b => `<option value="${b._id}">${b.busName} (${b.busNumber})</option>`).join("");
           
-          // Pre-select the bus assigned to the current conductor
-          const cName = document.getElementById("cName").textContent;
-          if (cName) {
-            const myBus = buses.find(b => b.conductorName === cName);
-            if (myBus) {
-              select.value = myBus._id;
-            }
+          const liveSelect = document.getElementById("liveBusSelect");
+          if(liveSelect) liveSelect.innerHTML = select.innerHTML;
+          
+          if (buses.length === 1) {
+             select.disabled = true;
+             if(liveSelect) liveSelect.disabled = true;
+          } else {
+             select.disabled = false;
+             if(liveSelect) liveSelect.disabled = false;
           }
-
+          
           handleBusChange();
         }
       } catch (err) {
@@ -1520,7 +1846,7 @@
       const bus = buses.find(b => b._id === busId);
       if (!bus) return;
 
-      const allStops = [bus.from, ...(bus.stops || []), bus.to];
+      const allStops = [...new Set([bus.from, ...(bus.stops || []), bus.to])];
       const bSelect = document.getElementById("boardingSelect");
       bSelect.innerHTML = allStops.slice(0, -1).map(stop => `<option value="${stop}">${stop}</option>`).join("");
       
@@ -1536,7 +1862,7 @@
       const bus = buses.find(b => b._id === busId);
       if (!bus) return;
 
-      const allStops = [bus.from, ...(bus.stops || []), bus.to];
+      const allStops = [...new Set([bus.from, ...(bus.stops || []), bus.to])];
       const boardingStop = document.getElementById("boardingSelect").value;
       const bIndex = allStops.indexOf(boardingStop);
 
@@ -1685,7 +2011,7 @@
     }
 
     function getStopRatio(bus, boardingPoint, droppingPoint) {
-      const allStops = [bus.from, ...(bus.stops || []), bus.to];
+      const allStops = [...new Set([bus.from, ...(bus.stops || []), bus.to])];
       const total = allStops.length - 1;
       if (total === 0) return 1;
       const bIdx = allStops.findIndex(s => s.toLowerCase() === boardingPoint.toLowerCase());
@@ -1863,7 +2189,8 @@
               </button>
             </div>
           `;
-          document.getElementById("manualEmail").value = "";
+          const mEmail = document.getElementById("manualEmail");
+          if (mEmail) mEmail.value = "";
           
           // Trigger working notification
           addNotification("Ticket Issued", `Deducted ₹${data.booking.totalPrice} from ${data.passenger.name}.`, "success");
@@ -1965,8 +2292,27 @@
           calculateDashboardMetrics();
           initCharts();
         }
+        await fetchSettlementDues();
       } catch (err) {
         console.error("Failed to load history metrics:", err);
+      }
+    }
+
+    async function fetchSettlementDues() {
+      try {
+        const res = await fetch(`${API}/conductor/settlement-dues`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            document.getElementById("dueTotalCollected").textContent = `₹${(data.totalCollected || 0).toLocaleString('en-IN')}`;
+            document.getElementById("dueOwner").textContent = `₹${(data.payableToOwner || 0).toLocaleString('en-IN')}`;
+            document.getElementById("dueAdmin").textContent = `₹${(data.commissionDue || 0).toLocaleString('en-IN')}`;
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching settlement dues:", err);
       }
     }
 
@@ -2177,7 +2523,7 @@
         if (res.ok) {
           allHistoryLogs = data;
           document.getElementById("historyDateFilter").value = "";
-          document.getElementById("historyStatusFilter").value = "all";
+          
           renderHistoryTable(allHistoryLogs);
         } else {
           tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center; padding:30px;">${data.message || "Failed to load"}</td></tr>`;
@@ -2269,13 +2615,6 @@
             <td>
               <span class="${badgeClass}">${badgeText}</span>
             </td>
-            <td>
-              ${(!isFailed && !isRefunded) ? `
-                <button onclick="refundPassengerBooking('${b._id}', event)" style="background: linear-gradient(135deg, var(--danger), #ff6b8b); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; font-weight: 700; transition: opacity 0.2s; box-shadow: 0 2px 6px rgba(244,63,94,0.2);"><i class="fas fa-undo"></i> Refund</button>
-              ` : `
-                <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 600;">-</span>
-              `}
-            </td>
           </tr>
         `;
       }).join("");
@@ -2283,7 +2622,7 @@
 
     function applyHistoryFilters() {
       const dateVal = document.getElementById("historyDateFilter").value;
-      const statusVal = document.getElementById("historyStatusFilter").value;
+      const statusVal = "all";
       const searchVal = document.getElementById("historySearchInput").value.trim().toLowerCase();
       
       const filtered = allHistoryLogs.filter(b => {
@@ -2335,7 +2674,7 @@
 
     function clearHistoryFilters() {
       document.getElementById("historyDateFilter").value = "";
-      document.getElementById("historyStatusFilter").value = "all";
+      
       document.getElementById("historySearchInput").value = "";
       renderHistoryTable(allHistoryLogs);
     }
@@ -2441,6 +2780,11 @@
       const experience = document.getElementById("profileExperience").value.trim();
       const phone = document.getElementById("profilePhone").value.trim();
       
+      const bankName = document.getElementById("profileBankName").value.trim();
+      const accountNumber = document.getElementById("profileAccountNumber").value.trim();
+      const ifscCode = document.getElementById("profileIfsc").value.trim();
+      const upiId = document.getElementById("profileUpi").value.trim();
+      
       if (!name) {
         showAlert("Full Name is required.", "danger");
         return;
@@ -2454,6 +2798,11 @@
       formData.append("age", age);
       formData.append("experience", experience);
       formData.append("phone", phone);
+      
+      formData.append("bankName", bankName);
+      formData.append("accountNumber", accountNumber);
+      formData.append("ifscCode", ifscCode);
+      formData.append("upiId", upiId);
       if (selectedProfileFile) {
         formData.append("userPhoto", selectedProfileFile);
       }
@@ -2509,6 +2858,30 @@
 
     // --- NOTIFICATION UTILITIES ---
     let notificationsList = [];
+
+    async function fetchNotifications() {
+      if (!token) return;
+      try {
+        const res = await fetch(`${API}/auth/notifications`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          // Map backend notifications to UI format
+          notificationsList = data.map(n => ({
+            id: n._id,
+            title: n.title,
+            message: n.message,
+            type: n.type || 'info',
+            read: n.read,
+            time: new Date(n.createdAt)
+          }));
+          updateNotiUI();
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    }
 
     function addNotification(title, message, type = 'info') {
       const id = Date.now();
@@ -2749,20 +3122,322 @@
       }
     }
 
+    
+    let journeyActive = false;
+    let watchId = null;
+    let conductorSocket = null;
+    let journeyInterval = null;
+    
+    // Simulation state
+    let simCoords = [];
+    let simStopIndices = [];
+    let simAllStops = [];
+    let simCurrentIndex = 0;
+    let simCurrentStopIndex = 0;
+    let simWaitTicks = 0;
+    let simIsWaiting = false;
+
+    function toggleJourney() {
+      const busId = document.getElementById("liveBusSelect").value;
+      if (!busId) {
+        alert("Please select a bus.");
+        return;
+      }
+      const btn = document.getElementById("startJourneyBtn");
+      const statusEl = document.getElementById("journeyStatus");
+      
+      if (!conductorSocket) {
+         conductorSocket = io(API.replace('/api', ''));
+      }
+
+      if (!journeyActive) {
+        journeyActive = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Fetching Route...`;
+        btn.style.background = 'var(--primary-dark)';
+        statusEl.innerHTML = `<span style="color:var(--success)"><i class="fas fa-circle-check"></i> Journey Active (Simulation...)</span>`;
+        
+        const bus = buses.find(b => b._id === busId);
+        const rawStops = bus ? [bus.from, ...(bus.stops || []), bus.to] : [];
+        const allStops = rawStops.filter((stop, idx, arr) => idx === 0 || stop !== arr[idx - 1]);
+        
+        const stopCoordinates = {
+          "thaudugoli": [74.8967, 12.8021],
+          "montepadavu": [74.9264, 12.7949],
+          "kallukatta": [74.9019, 12.7924],
+          "konaje": [74.9021, 12.8162],
+          "mangalore university": [74.9244, 12.8160],
+          "belaringe": [74.8900, 12.7850],
+          "meempri": [74.8950, 12.7900],
+          "natekal": [74.9037, 12.8020],
+          "kannachur": [74.8989, 12.8051],
+          "k.s. hegde hospital": [74.8906, 12.8094],
+          "deralakatte": [74.8940, 12.8088],
+          "kuthar": [74.8760, 12.8195],
+          "kuthar junction": [74.8760, 12.8195],
+          "babbukatte": [74.8659, 12.8185],
+          "thokkottu": [74.860673, 12.818348],
+          "mugeru": [74.867158, 12.859398],
+          "nagori": [74.8745, 12.8700],
+          "pumpwell": [74.8640, 12.8688],
+          "kankanady": [74.8600, 12.8646],
+          "balmatta": [74.8470, 12.8711],
+          "jyothi": [74.8491, 12.8711],
+          "jyothi circle": [74.8491, 12.8711],
+          "hampankatta": [74.8434, 12.8691],
+          "state bank": [74.8365, 12.8627],
+          "mangalore": [74.8365, 12.8627]
+        };
+
+        function getDistSq(p1, p2) {
+          return (p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2;
+        }
+
+        async function fetchRealisticRoute() {
+          try {
+             let validCoords = [];
+             let stopRealCoords = [];
+             
+             for (let stop of allStops) {
+                let key = stop.toLowerCase().trim();
+                let coord = null;
+                if (stopCoordinates[key]) {
+                   coord = stopCoordinates[key];
+                   validCoords.push(coord.join(','));
+                } else {
+                   try {
+                     const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(stop + ' Mangalore')}`);
+                     const data = await res.json();
+                     if (data && data.length > 0) {
+                        coord = [parseFloat(data[0].lon), parseFloat(data[0].lat)];
+                        validCoords.push(coord.join(','));
+                     }
+                   } catch(e) { console.error("Nominatim error", e); }
+                }
+                stopRealCoords.push(coord);
+             }
+             
+             if (validCoords.length < 2) {
+                validCoords = ["74.8436,12.8700", "74.8698,12.8158"];
+             }
+             
+             // Generate a smooth route using only Start and End to avoid OSRM U-turn detours for intermediate waypoints
+             const routeEndpoints = validCoords;
+             const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${routeEndpoints.join(';')}?overview=full&geometries=geojson`;
+             const osrmRes = await fetch(osrmUrl);
+             const data = await osrmRes.json();
+             
+             if (!data || !data.routes || data.routes.length === 0) {
+                 throw new Error("No route found from OSRM");
+             }
+             
+             const coords = data.routes[0].geometry.coordinates;
+             
+             btn.innerHTML = `<i class="fas fa-stop"></i> Stop Journey`;
+             btn.style.background = "var(--danger)";
+             
+             let stopIndices = [];
+             for (let i = 0; i < allStops.length; i++) {
+                let targetCoord = stopRealCoords[i];
+                if (!targetCoord) {
+                  stopIndices.push(Math.floor(coords.length * (i / (allStops.length - 1))));
+                  continue;
+                }
+                
+                let minDist = Infinity;
+                let minIdx = 0;
+                for (let j = 0; j < coords.length; j++) {
+                  let d = getDistSq(targetCoord, coords[j]);
+                  if (d < minDist) {
+                    minDist = d;
+                    minIdx = j;
+                  }
+                }
+                stopIndices.push(minIdx);
+             }
+             
+             for (let i = 1; i < stopIndices.length; i++) {
+                if (stopIndices[i] <= stopIndices[i-1]) stopIndices[i] = stopIndices[i-1] + 1;
+             }
+             if (stopIndices[stopIndices.length - 1] >= coords.length) {
+                stopIndices[stopIndices.length - 1] = coords.length - 1;
+             }
+
+             simCoords = coords;
+             simStopIndices = stopIndices;
+             simAllStops = allStops;
+             simCurrentIndex = 0;
+             simCurrentStopIndex = 0;
+             simWaitTicks = 10;
+             simIsWaiting = true;
+             
+             const manualStopSelect = document.getElementById("manualNextStop");
+             manualStopSelect.innerHTML = allStops.map((stop, i) => `<option value="${i}">${stop}</option>`).join("");
+
+             conductorSocket.emit("conductor_location_update", {
+              busId,
+              nextStop: `ARRIVED AT: ${allStops[0]}`,
+              lat: coords[0][1],
+              lng: coords[0][0],
+              routeCoordinates: coords
+            });
+
+            statusEl.textContent = `Status: Stopped at ${allStops[0]} (10s)`;
+
+            journeyInterval = setInterval(() => {
+              if (!journeyActive) {
+                clearInterval(journeyInterval);
+                return;
+              }
+              
+              if (simIsWaiting) {
+                simWaitTicks--;
+                if (simWaitTicks > 0) {
+                    const currentStop = simAllStops[simCurrentStopIndex];
+                    statusEl.textContent = `Status: Stopped at ${currentStop} (${simWaitTicks}s)`;
+                }
+                if (simWaitTicks <= 0) {
+                  simIsWaiting = false;
+                  simCurrentStopIndex++;
+                  if (simCurrentStopIndex < simAllStops.length) {
+                    const nxtStop = simAllStops[simCurrentStopIndex];
+                    conductorSocket.emit("conductor_location_update", {
+                      busId,
+                      nextStop: `NEXT STOP: ${nxtStop}`
+                    });
+                    const manualSel = document.getElementById("manualNextStop");
+                    if (manualSel) manualSel.value = simCurrentStopIndex;
+                    statusEl.textContent = `Status: Driving to ${nxtStop}`;
+                  } else {
+                    simCoords.reverse();
+                    simAllStops.reverse();
+                    
+                    const L = simCoords.length;
+                    simStopIndices = simStopIndices.map(idx => L - 1 - idx).reverse();
+                    
+                    simCurrentIndex = 0;
+                    simCurrentStopIndex = 1; 
+                    
+                    const nxtStop = simAllStops[simCurrentStopIndex];
+                    conductorSocket.emit("conductor_location_update", {
+                      busId,
+                      nextStop: `NEXT STOP: ${nxtStop}`,
+                      routeCoordinates: simCoords
+                    });
+                    
+                    const manualSel = document.getElementById("manualNextStop");
+                    if (manualSel) {
+                        manualSel.innerHTML = simAllStops.map((stop, i) => `<option value="${i}">${stop}</option>`).join("");
+                        manualSel.value = simCurrentStopIndex;
+                    }
+                    statusEl.textContent = `Status: Return Trip - Driving to ${nxtStop}`;
+                    addNotification("Return Trip Started", `Heading to ${nxtStop}`, "info");
+                  }
+                }
+                return;
+              }
+              
+              simCurrentIndex += 1;
+              if (simCurrentIndex >= simCoords.length) simCurrentIndex = simCoords.length - 1;
+              
+              const currentPoint = simCoords[simCurrentIndex];
+              conductorSocket.emit("conductor_location_update", {
+                busId,
+                lat: currentPoint[1],
+                lng: currentPoint[0],
+                routeCoordinates: simCoords
+              });
+              
+              if (simCurrentStopIndex < simAllStops.length && simCurrentIndex >= simStopIndices[simCurrentStopIndex]) {
+                simIsWaiting = true;
+                
+                const isTerminal = (simCurrentStopIndex === simAllStops.length - 1);
+                simWaitTicks = isTerminal ? 60 : 10;
+                
+                const arrStop = simAllStops[simCurrentStopIndex];
+                
+                let arrivalText = `ARRIVED AT: ${arrStop}`;
+                if (isTerminal) {
+                    const depTime = new Date();
+                    depTime.setMinutes(depTime.getMinutes() + 1);
+                    let hours = depTime.getHours();
+                    let minutes = depTime.getMinutes();
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12 || 12;
+                    minutes = minutes < 10 ? '0' + minutes : minutes;
+                    
+                    arrivalText = `ARRIVED AT: ${arrStop} (DEPARTING AT ${hours}:${minutes} ${ampm})`;
+                }
+                
+                conductorSocket.emit("conductor_location_update", {
+                  busId,
+                  nextStop: arrivalText
+                });
+                statusEl.textContent = `Status: Stopped at ${arrStop} (${isTerminal ? '1m' : '10s'})`;
+                addNotification("Bus Stopped", `Arrived at ${arrStop}`, "success");
+              }
+            }, 1000);
+            
+          } catch(err) {
+             console.error("Geocoding/Routing Error:", err);
+             alert("Failed to load realistic route.");
+             journeyActive = false;
+             btn.innerHTML = `<i class="fas fa-play"></i> Start Journey`;
+          }
+        }
+        
+        fetchRealisticRoute();
+      } else {
+        journeyActive = false;
+        btn.innerHTML = `<i class="fas fa-play"></i> Start Journey`;
+        btn.style.background = 'var(--primary)';
+        statusEl.innerHTML = `Status: Not Started`;
+        if (journeyInterval) {
+          clearInterval(journeyInterval);
+        }
+      }
+    }
+
+    async function updateNextStop() {
+      if (!journeyActive) {
+        alert("Please start the journey first.");
+        return;
+      }
+      const busId = document.getElementById("liveBusSelect").value;
+      const selectEl = document.getElementById("manualNextStop");
+      const targetIndex = parseInt(selectEl.value, 10);
+      if (isNaN(targetIndex) || !simAllStops.length) {
+        alert("Please select a valid stop.");
+        return;
+      }
+      
+      const nextStopName = simAllStops[targetIndex];
+      simCurrentStopIndex = targetIndex;
+      simCurrentIndex = simStopIndices[simCurrentStopIndex];
+      simIsWaiting = false;
+      simWaitTicks = 0;
+      
+      conductorSocket.emit("conductor_location_update", {
+         busId,
+         lat: simCoords[simCurrentIndex][1],
+         lng: simCoords[simCurrentIndex][0],
+         routeCoordinates: simCoords,
+         nextStop: `ARRIVED AT: ${nextStopName}`
+      });
+      
+      document.getElementById("journeyStatus").textContent = `Status: Jumped to ${nextStopName}`;
+      addNotification("Stop Jumped", `Teleported bus to: ${nextStopName}`, "success");
+    }
+
     // Close notifications dropdown when clicking outside
     document.addEventListener("click", () => {
       const drop = document.getElementById("notiDropdown");
       if (drop) drop.style.display = "none";
     });
-
-    // Restore active tab from localStorage
-    const savedConductorTab = localStorage.getItem("activeConductorTab");
-    if (savedConductorTab) {
-      switchTab(savedConductorTab);
-    }
-  </script>
+  
+</script>
 </body>
 </html>
+
 
 
 
