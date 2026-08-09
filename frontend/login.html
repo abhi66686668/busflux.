@@ -744,7 +744,7 @@
       overlay.classList.add('visible');
 
       try {
-        const res = await fetch("http://localhost:5000/api/auth/login", {
+        const res = await fetch(((window.location.protocol === "file:" ? "http://localhost:5000/api" : "/api") + "/auth/login"), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -787,7 +787,7 @@
         overlay.classList.add('visible');
   
         try {
-          const res = await fetch("http://localhost:5000/api/auth/login", {
+          const res = await fetch(((window.location.protocol === "file:" ? "http://localhost:5000/api" : "/api") + "/auth/login"), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone: '+91' + phone, password })
