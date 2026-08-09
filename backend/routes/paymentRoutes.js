@@ -56,9 +56,17 @@ router.post("/create-order", auth, async (req, res) => {
 
     const user = await User.findById(req.user.id);
     const ageGroup = user?.ageGroup || "";
-    const basePrice = getAgeGroupPrice(bus, ageGroup);
-    const ratio = getStopRatio(bus, boardingPoint || bus.from, droppingPoint || bus.to);
-    const pricePerSeat = Math.round(basePrice * ratio);
+    const bp = boardingPoint || bus.from;
+    const dp = droppingPoint || bus.to;
+    const allStops = [bus.from, ...(bus.stops || []), bus.to];
+    const bIdx = allStops.findIndex(s => s.toLowerCase() === bp.toLowerCase());
+    const dIdx = allStops.findIndex(s => s.toLowerCase() === dp.toLowerCase());
+    
+    let segments = 0;
+    if (bIdx !== -1 && dIdx !== -1 && dIdx > bIdx) {
+      segments = dIdx - bIdx;
+    }
+    const pricePerSeat = segments > 0 ? Math.min(segments * 5, 25) : 0;
     const totalPrice = pricePerSeat * seatsBooked;
 
     // Create Razorpay order (amount in paise)
@@ -123,9 +131,17 @@ router.post("/verify", auth, async (req, res) => {
 
     const user = await User.findById(req.user.id);
     const ageGroup = user?.ageGroup || "";
-    const basePrice = getAgeGroupPrice(bus, ageGroup);
-    const ratio = getStopRatio(bus, boardingPoint || bus.from, droppingPoint || bus.to);
-    const pricePerSeat = Math.round(basePrice * ratio);
+    const bp = boardingPoint || bus.from;
+    const dp = droppingPoint || bus.to;
+    const allStops = [bus.from, ...(bus.stops || []), bus.to];
+    const bIdx = allStops.findIndex(s => s.toLowerCase() === bp.toLowerCase());
+    const dIdx = allStops.findIndex(s => s.toLowerCase() === dp.toLowerCase());
+    
+    let segments = 0;
+    if (bIdx !== -1 && dIdx !== -1 && dIdx > bIdx) {
+      segments = dIdx - bIdx;
+    }
+    const pricePerSeat = segments > 0 ? Math.min(segments * 5, 25) : 0;
     const totalPrice = pricePerSeat * seatsBooked;
 
     const booking = await Booking.create({
@@ -283,7 +299,16 @@ router.post("/wallet-verify", auth, async (req, res) => {
     let bonusPercent = 0.10;
     let passName = "Standard Pass";
 
-    const bonus = Math.round(rechargeAmount * bonusPercent);
+    let bonus = Math.round(rechargeAmount * bonusPercent);
+    
+    // First recharge bonus
+    let isFirstRecharge = false;
+    const pastRecharges = await Transaction.countDocuments({ userId: user._id });
+    if (pastRecharges === 0) {
+      bonus += 100;
+      isFirstRecharge = true;
+    }
+
     const totalCredit = rechargeAmount + bonus;
 
     user.balance = (user.balance || 0) + totalCredit;
@@ -319,6 +344,19 @@ router.post("/wallet-verify", auth, async (req, res) => {
         targetRole: "user",
         targetUser: user._id
       });
+
+      if (isFirstRecharge) {
+        const firstNotif = await Notification.create({
+          title: "First Login Bonus!",
+          message: "100 rupees added to your wallet for your first recharge!",
+          type: "success",
+          targetRole: "user",
+          targetUser: user._id
+        });
+        if (io) {
+          io.to(user._id.toString()).emit('new_notification', firstNotif);
+        }
+      }
 
       if (io) {
         io.to(user._id.toString()).emit('new_notification', userNotif);
@@ -372,6 +410,16 @@ router.post("/buy-monthly-pass", auth, async (req, res) => {
 
     user.monthlyPassBalance = newBalance;
     
+    // First recharge bonus
+    let bonus = 0;
+    let isFirstRecharge = false;
+    const pastRecharges = await Transaction.countDocuments({ userId: user._id });
+    if (pastRecharges === 0) {
+      bonus = 100;
+      user.balance = (user.balance || 0) + bonus;
+      isFirstRecharge = true;
+    }
+    
     // Set expiry based on validityDays
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + validityDays);
@@ -382,7 +430,8 @@ router.post("/buy-monthly-pass", auth, async (req, res) => {
     await Transaction.create({
       userId: user._id,
       amount: amount,
-      totalCredit: amount,
+      bonus: bonus,
+      totalCredit: amount + bonus,
       method: req.body.method || "Razorpay (Pass)",
       status: "Completed"
     });
@@ -396,6 +445,19 @@ router.post("/buy-monthly-pass", auth, async (req, res) => {
         targetRole: "user",
         targetUser: user._id
       });
+      
+      if (isFirstRecharge) {
+        const firstNotif = await Notification.create({
+          title: "First Login Bonus!",
+          message: "100 rupees added to your wallet for your first recharge!",
+          type: "success",
+          targetRole: "user",
+          targetUser: user._id
+        });
+        if (io) {
+          io.to(user._id.toString()).emit('new_notification', firstNotif);
+        }
+      }
 
       if (io) {
         io.to(user._id.toString()).emit('new_notification', userNotif);

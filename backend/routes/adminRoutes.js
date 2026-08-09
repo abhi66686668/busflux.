@@ -4,6 +4,7 @@ const User    = require("../models/User");
 const Bus     = require("../models/Bus");
 const Booking = require("../models/Booking");
 const OwnerTransaction = require("../models/OwnerTransaction");
+const SupportTicket = require("../models/SupportTicket");
 const jwt     = require("jsonwebtoken");
 const bcrypt  = require("bcryptjs");
 
@@ -51,7 +52,7 @@ router.get("/stats", adminAuth, async (req, res) => {
     const totalRevenue = bookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
     
     // Total Admin Profit (Commission)
-    const transactions = await OwnerTransaction.find({ status: "Settled" });
+    const transactions = await OwnerTransaction.find();
     const totalAdminProfit = transactions.reduce((sum, tx) => sum + (tx.commissionAmount || 0), 0);
 
     // Users by age group
@@ -71,7 +72,7 @@ router.get("/stats", adminAuth, async (req, res) => {
 router.get("/profit-history", adminAuth, async (req, res) => {
   try {
     const history = await OwnerTransaction.find({ status: "Settled" })
-      .populate('busId', 'name busNumber')
+      .populate('busId')
       .sort({ updatedAt: -1 });
     res.status(200).json({ success: true, data: history });
   } catch (error) {
@@ -299,6 +300,92 @@ router.post("/remind-bank-details/:conductorId", adminAuth, async (req, res) => 
     res.status(200).json({ success: true, message: "Reminder sent to conductor." });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ================= SUPPORT TICKETS =================
+
+// Public: Submit a support ticket (optionally auth)
+router.post("/support", async (req, res) => {
+  try {
+    const { subject, details, name, email } = req.body;
+    if (!subject || !details) return res.status(400).json({ message: "Subject and details are required" });
+
+    // Try to identify logged-in user via optional auth header
+    let userId = null;
+    let userName = name || "Guest";
+    let userEmail = email || "";
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      try {
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id).select("name email");
+        if (user) { userId = user._id; userName = user.name; userEmail = user.email; }
+      } catch (_) {}
+    }
+
+    const ticket = await SupportTicket.create({ userId, name: userName, email: userEmail, subject, details });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('new_admin_notification', { message: "New support ticket: " + subject, type: "info" });
+      io.emit('admin_data_updated');
+    }
+
+    res.status(201).json({ success: true, message: "Support ticket submitted successfully!", ticket });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin: Get all support tickets
+router.get("/support", adminAuth, async (req, res) => {
+  try {
+    const tickets = await SupportTicket.find()
+      .populate("userId", "name email userPhoto")
+      .sort({ createdAt: -1 });
+    res.status(200).json({ success: true, tickets });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin: Update ticket status
+router.put("/support/:id/status", adminAuth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const ticket = await SupportTicket.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+    res.status(200).json({ success: true, ticket });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin: Reply to a ticket
+router.put("/support/:id/reply", adminAuth, async (req, res) => {
+  try {
+    const { adminReply } = req.body;
+    const ticket = await SupportTicket.findByIdAndUpdate(
+      req.params.id,
+      { adminReply, status: "resolved" },
+      { new: true }
+    );
+    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+    res.status(200).json({ success: true, ticket });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin: Delete a ticket
+router.delete("/support/:id", adminAuth, async (req, res) => {
+  try {
+    await SupportTicket.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: "Ticket deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 

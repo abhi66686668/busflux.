@@ -105,4 +105,30 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.post('/assist', async (req, res) => {
+    try {
+        const { subject, details } = req.body;
+        
+        let context = '';
+        if (subject) context += `Subject: ${subject}\n`;
+        if (details) context += `Details: ${details}\n`;
+
+        if (!context) {
+            return res.status(400).json({ error: "No input provided" });
+        }
+
+        // Mocking a powerful AI response for the demo
+        let expandedText = `I am writing to report an issue regarding "${subject || 'a recent problem'}". \n\n${details ? `Specifically, ${details}. ` : ''}\nThis has caused a significant inconvenience, and I would appreciate it if the support team could look into this matter as soon as possible and provide a resolution. Thank you.`;
+        
+        // Simulate AI generation delay
+        setTimeout(() => {
+            res.json({ expandedText });
+        }, 1200);
+
+    } catch (error) {
+        console.error("AI Assist error:", error);
+        res.status(500).json({ error: "Something went wrong" });
+    }
+});
+
 module.exports = router;

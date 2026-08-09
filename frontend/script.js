@@ -675,8 +675,25 @@ if (busList) {
         return;
       }
 
+      function getDuration(dep, arr) {
+        if(!dep || !arr) return "Est. --";
+        try {
+          const p = (s) => { const m = s.match(/(\d+):(\d+)/); return m ? parseInt(m[1])*60 + parseInt(m[2]) : 0; };
+          let d = p(dep), a = p(arr);
+          if (a < d) a += 24*60;
+          const diff = a - d;
+          if (diff <= 0) return "Est. --";
+          const h = Math.floor(diff/60), m = diff%60;
+          return h > 0 ? (m > 0 ? `Est. ${h}h ${m}m` : `Est. ${h}h`) : `Est. ${m}m`;
+        } catch(e) { return "Est. --"; }
+      }
+
       let cardsHtml = "";
       buses.forEach((bus, index) => {
+        const dTime = bus.departureTime || '08:00';
+        const aTime = bus.arrivalTime || '12:30';
+        const durationText = getDuration(dTime, aTime);
+
         const photoHtml = bus.busPhoto
           ? `<div class="bus-card-img-wrap"><img class="bus-card-img" src="${window.getImageUrl(bus.busPhoto)}" onerror="this.parentElement.classList.add('no-img'); this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-bus\\'></i>';" alt="${bus.busName}"><div class="bus-img-overlay"></div></div>`
           : `<div class="bus-card-img-wrap no-img"><i class="fas fa-bus"></i></div>`;
@@ -701,23 +718,22 @@ if (busList) {
                 <div class="route-point from">
                   <div class="route-label">Departure</div>
                   <div class="route-name">${bus.from}</div>
-                  <div class="route-time">${bus.departureTime || '08:00 AM'}</div>
+                  <div class="route-time">${dTime}</div>
                 </div>
                 <div class="route-line-wrap">
-                  <div class="route-duration">Est. 4h 30m</div>
+                  <div class="route-duration" id="duration-${bus._id}">${durationText}</div>
                   <div class="route-line"></div>
                 </div>
                 <div class="route-point to">
                   <div class="route-label">Arrival</div>
                   <div class="route-name">${bus.to}</div>
-                  <div class="route-time">${bus.arrivalTime || '12:30 PM'}</div>
+                  <div class="route-time">${aTime}</div>
                 </div>
               </div>
 
               ${stopsPreview}
 
-              <div class="bus-footer">
-                <span class="bus-footer-info"><i class="fas fa-ticket-alt"></i> Online Booking Available</span>
+              <div class="bus-footer" style="justify-content: flex-end;">
                 <div>
                   <button class="book-now-btn" style="background:var(--success);" onclick="openTrackingModal('${bus._id}', '${bus.busName}')"><i class="fas fa-location-dot"></i> Track</button>
                 </div>
@@ -727,6 +743,26 @@ if (busList) {
         `;
       });
       busList.innerHTML = cardsHtml;
+      
+      // Global tracking for bus list cards
+      if (typeof io !== 'undefined') {
+        if (!window.globalBusSocket) {
+          window.globalBusSocket = io(API_BASE_URL.replace('/api', ''));
+          window.globalBusSocket.on('bus_location_update', (data) => {
+            const durationEl = document.getElementById(`duration-${data.busId}`);
+            if (durationEl && data.nextStop) {
+               // The nextStop string is usually "NEXT STOP: Konaje (3m)" or "ARRIVED AT: Konaje"
+               // We can extract just the ETA part or just show the whole string
+               durationEl.textContent = data.nextStop.replace('NEXT STOP:', 'Next:').substring(0, 30);
+               durationEl.style.color = 'var(--primary)';
+               durationEl.style.fontWeight = 'bold';
+               durationEl.style.background = 'rgba(99, 102, 241, 0.1)';
+            }
+          });
+        }
+        buses.forEach(b => window.globalBusSocket.emit('join_bus_room', b._id));
+      }
+
     } catch (error) {
       console.error(error);
       busList.innerHTML = `<div class="empty-state" style="color:var(--danger);"><i class="fas fa-exclamation-triangle"></i><p>Failed to load routes. Is the backend server running?</p></div>`;
@@ -1806,14 +1842,14 @@ window.showOffersToast = function() {
         </div>
         
         <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- Offer 1 -->
-          <div style="background:${isDark ? 'rgba(245, 158, 11, 0.1)' : '#fffbeb'}; border:1px dashed #f59e0b; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px;">
-            <div style="background:#f59e0b; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
-              <i class="fas fa-wallet"></i>
+          <!-- Offer 2 (Now the only offer) -->
+          <div onclick="window.location.href='wallet.html'" style="cursor:pointer; background:${isDark ? 'rgba(16, 185, 129, 0.1)' : '#ecfdf5'}; border:1px dashed #10b981; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+            <div style="background:#10b981; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
+              <i class="fas fa-gift"></i>
             </div>
             <div style="flex:1;">
-              <h4 style="color:${isDark ? '#fbbf24' : '#b45309'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">Cashback Fiesta</h4>
-              <p style="color:${isDark ? '#fcd34d' : '#b45309'}; margin:0; font-size:0.85rem; line-height:1.4;">First recharge will get ₹100 cash back!</p>
+              <h4 style="color:${isDark ? '#34d399' : '#059669'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">Special Offer</h4>
+              <p style="color:${isDark ? '#6ee7b7' : '#059669'}; margin:0; font-size:0.85rem; line-height:1.4;">Get 10% Extra Bonus on all Wallet Recharges!</p>
             </div>
           </div>
         </div>

@@ -192,6 +192,52 @@
       box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
       transform: translateY(-2px);
     }
+    
+    .my-tickets-section {
+      margin-top: 40px;
+    }
+    .ticket-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .ticket-card h4 {
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 1.1rem;
+    }
+    .ticket-card .ticket-date {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .ticket-card .ticket-status {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .ticket-status.pending { background: rgba(255,152,0,0.1); color: #ff9800; }
+    .ticket-status.resolved { background: rgba(76,175,80,0.1); color: #4caf50; }
+    .ticket-admin-reply {
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(99, 102, 241, 0.08);
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .ticket-admin-reply strong {
+      color: var(--primary);
+      display: block;
+      margin-bottom: 5px;
+    }
   </style>
 
   <!-- PWA Manifest and Mobile Web App Support -->
@@ -304,13 +350,23 @@
           <label>Subject</label>
           <input type="text" id="supportSubject" placeholder="Briefly describe your issue" required>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="position: relative;">
           <label>Details</label>
-          <textarea id="supportDetails" rows="5" placeholder="Please provide as much information as possible..." required></textarea>
+          <textarea id="supportDetails" rows="5" placeholder="Please provide as much information as possible..." required style="padding-bottom: 40px;"></textarea>
+          <button type="button" id="aiAssistBtn" style="position: absolute; bottom: 15px; right: 15px; width: max-content; background: linear-gradient(135deg, #8a2be2, #4b0082); color: white; border: none; border-radius: 20px; padding: 6px 14px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(108, 63, 214, 0.3); transition: transform 0.2s, box-shadow 0.2s;">
+            <i class="fas fa-magic"></i> AI Assist
+          </button>
         </div>
         <div id="messageBox" style="display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center;"></div>
         <button type="submit" class="support-btn" id="submitSupportBtn"><i class="fas fa-paper-plane"></i> Send Message</button>
       </form>
+    </div>
+    
+    <div class="my-tickets-section" id="myTicketsSection" style="display: none;">
+      <h2 class="section-title">My Support Tickets</h2>
+      <div id="myTicketsList">
+        <p style="text-align: center; color: var(--muted);">Loading tickets...</p>
+      </div>
     </div>
   </div>
 
@@ -329,48 +385,164 @@
     });
 
     // FAQ Search Logic
-    document.getElementById('faqSearch').addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase();
-      faqItems.forEach(item => {
-        const text = item.innerText.toLowerCase();
-        if (text.includes(q)) {
-          item.style.display = 'block';
-        } else {
-          item.style.display = 'none';
-          item.classList.remove('active');
-        }
+    const faqSearch = document.getElementById('faqSearch');
+    if (faqSearch) {
+      faqSearch.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        faqItems.forEach(item => {
+          const text = item.innerText.toLowerCase();
+          if (text.includes(q)) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+            item.classList.remove('active');
+          }
+        });
       });
-    });
+    }
 
-    // Support Form Submission Simulation
-    document.getElementById('supportForm').addEventListener('submit', (e) => {
+    // AI Assist Logic
+    const aiAssistBtn = document.getElementById('aiAssistBtn');
+    if (aiAssistBtn) {
+      aiAssistBtn.addEventListener('click', async () => {
+        const subject = document.getElementById('supportSubject').value.trim();
+        const detailsElem = document.getElementById('supportDetails');
+        const details = detailsElem.value.trim();
+        
+        if (!subject && !details) {
+          alert('Please enter a brief subject or some details first so the AI knows what to write about!');
+          return;
+        }
+
+        const originalHtml = aiAssistBtn.innerHTML;
+        aiAssistBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        aiAssistBtn.disabled = true;
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/chat/assist`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject, details })
+          });
+          const data = await res.json();
+          if (data.expandedText) {
+            detailsElem.value = data.expandedText;
+          } else {
+            alert('Could not generate text. Please try again.');
+          }
+        } catch (err) {
+          alert('Error connecting to AI service.');
+        }
+
+        aiAssistBtn.innerHTML = originalHtml;
+        aiAssistBtn.disabled = false;
+      });
+    }
+
+    // Support Form — real API submission
+    document.getElementById('supportForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('submitSupportBtn');
-      const msgBox = document.getElementById('messageBox');
-      const subj = document.getElementById('supportSubject');
-      const details = document.getElementById('supportDetails');
+      const btn     = document.getElementById('submitSupportBtn');
+      const msgBox  = document.getElementById('messageBox');
+      const subject = document.getElementById('supportSubject').value.trim();
+      const details = document.getElementById('supportDetails').value.trim();
 
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-      btn.disabled = true;
+      btn.disabled  = true;
+      msgBox.style.display = 'none';
 
-      // Simulate network request
-      setTimeout(() => {
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = localStorage.getItem('token');
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res  = await fetch(`${API_BASE_URL}/admin/support`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ subject, details })
+        });
+        const data = await res.json();
+
         msgBox.style.display = 'block';
-        msgBox.style.background = 'rgba(16, 185, 129, 0.1)';
-        msgBox.style.color = 'var(--success)';
-        msgBox.style.border = '1px solid var(--success)';
-        msgBox.textContent = 'Support ticket submitted successfully! Our team will reach out shortly.';
-        
-        subj.value = '';
-        details.value = '';
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
-        btn.disabled = false;
+        if (res.ok) {
+          msgBox.style.background = 'rgba(16, 185, 129, 0.1)';
+          msgBox.style.color      = 'var(--success, #10b981)';
+          msgBox.style.border     = '1px solid var(--success, #10b981)';
+          msgBox.textContent      = '✅ ' + (data.message || 'Support ticket submitted! Our team will reach out shortly.');
+          document.getElementById('supportSubject').value = '';
+          document.getElementById('supportDetails').value = '';
+        } else {
+          msgBox.style.background = 'rgba(239,68,68,0.1)';
+          msgBox.style.color      = '#ef4444';
+          msgBox.style.border     = '1px solid #ef4444';
+          msgBox.textContent      = '❌ ' + (data.message || 'Failed to submit ticket. Please try again.');
+        }
+      } catch (err) {
+        msgBox.style.display    = 'block';
+        msgBox.style.background = 'rgba(239,68,68,0.1)';
+        msgBox.style.color      = '#ef4444';
+        msgBox.style.border     = '1px solid #ef4444';
+        msgBox.textContent      = '❌ Network error. Please check your connection and try again.';
+      }
 
-        setTimeout(() => {
-          msgBox.style.display = 'none';
-        }, 5000);
-      }, 1500);
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+      btn.disabled  = false;
+      setTimeout(() => { msgBox.style.display = 'none'; }, 6000);
     });
+
+    // Fetch and render My Tickets
+    async function loadMyTickets() {
+      const token = localStorage.getItem('token');
+      if (!token) return; // User not logged in
+      
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/my-support`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (data.success && data.tickets.length > 0) {
+          document.getElementById('myTicketsSection').style.display = 'block';
+          const list = document.getElementById('myTicketsList');
+          
+          list.innerHTML = data.tickets.map(t => {
+            const dateStr = new Date(t.createdAt).toLocaleDateString();
+            const isResolved = t.status === 'resolved';
+            const statusClass = isResolved ? 'resolved' : 'pending';
+            
+            let replyHtml = '';
+            if (isResolved && t.adminReply) {
+              replyHtml = `
+                <div class="ticket-admin-reply">
+                  <strong><i class="fas fa-headset"></i> Admin Reply:</strong>
+                  ${t.adminReply}
+                </div>
+              `;
+            }
+            
+            return `
+              <div class="ticket-card">
+                <h4>${t.subject}</h4>
+                <div class="ticket-date"><i class="far fa-calendar-alt"></i> ${dateStr}</div>
+                <div class="ticket-status ${statusClass}">${isResolved ? 'Resolved' : 'Pending'}</div>
+                <p style="font-size: 0.9rem; color: var(--text-muted);">${t.details}</p>
+                ${replyHtml}
+              </div>
+            `;
+          }).join('');
+        } else if (data.success) {
+          document.getElementById('myTicketsSection').style.display = 'block';
+          document.getElementById('myTicketsList').innerHTML = `<p style="text-align: center; color: var(--muted);">You haven't submitted any support tickets yet.</p>`;
+        }
+      } catch (err) {
+        console.error("Error loading tickets", err);
+      }
+    }
+    
+    // Load tickets on start if logged in
+    if(localStorage.getItem('token')) {
+      loadMyTickets();
+    }
   </script>
       </div>
     </div>

@@ -1,0 +1,87 @@
+
+--- adminRoutes.js ---
+POST "/login"
+GET "/stats"
+GET "/profit-history"
+GET "/users"
+GET "/users/:id"
+DELETE "/users/:id"
+GET "/bookings"
+POST "/create"
+GET "/transactions"
+GET "/conductors"
+POST "/conductors/add"
+DELETE "/conductors/:id"
+PUT "/conductors/:id"
+GET "/notifications"
+PUT "/notifications/read"
+POST "/remind-bank-details/:conductorId"
+POST "/support"
+GET "/support"
+PUT "/support/:id/status"
+PUT "/support/:id/reply"
+DELETE "/support/:id"
+
+--- authRoutes.js ---
+POST "/check-user"
+GET "/me"
+PUT "/me"
+POST "/wallet/create-order"
+POST "/wallet/verify-payment"
+GET "/wallet/transactions"
+GET "/notifications"
+PUT "/notifications/read"
+
+--- bookingRoutes.js ---
+POST "/book/:busId"
+POST "/calculate-price/:busId"
+GET "/my-bookings"
+
+--- busRoutes.js ---
+POST "/add"
+GET "/"
+GET "/admin/all"
+GET "/:id"
+PUT "/:id"
+DELETE "/:id"
+
+--- chatbotRoutes.js ---
+POST '/'
+POST '/assist'
+
+--- conductorRoutes.js ---
+POST "/scan"
+GET "/settlement-dues"
+GET "/search-passenger"
+POST "/deduct-pass"
+GET "/history"
+POST "/refund-booking"
+PUT "/update-stop"
+
+--- paymentRoutes.js ---
+POST "/create-order"
+POST "/verify"
+POST "/wallet-recharge"
+POST "/wallet-verify"
+GET "/wallet-balance"
+POST "/buy-monthly-pass"
+
+--- reviewRoutes.js ---
+POST '/'
+GET '/'
+
+--- settingRoutes.js ---
+GET "/"
+GET "/:key"
+PUT "/payment-qr"
+PUT "/commission-rate"
+
+--- settlementRoutes.js ---
+GET "/dashboard"
+POST "/generate"
+POST "/generate/:busId"
+GET "/transactions/:busId"
+GET "/history"
+
+--- statsRoutes.js ---
+GET '/'

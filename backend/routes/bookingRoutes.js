@@ -55,12 +55,17 @@ router.post("/book/:busId", auth, async (req, res) => {
     const user     = await User.findById(req.user.id);
     const ageGroup = user?.ageGroup || "";
 
-    // Age-group base price per seat
-    const basePrice = getAgeGroupPrice(bus, ageGroup);
-
-    // Scale by route segment ratio
-    const ratio      = getStopRatio(bus, boardingPoint || bus.from, droppingPoint || bus.to);
-    const pricePerSeat = Math.round(basePrice * ratio);
+    const bp = boardingPoint || bus.from;
+    const dp = droppingPoint || bus.to;
+    const allStops = [bus.from, ...(bus.stops || []), bus.to];
+    const bIdx = allStops.findIndex(s => s.toLowerCase() === bp.toLowerCase());
+    const dIdx = allStops.findIndex(s => s.toLowerCase() === dp.toLowerCase());
+    
+    let segments = 0;
+    if (bIdx !== -1 && dIdx !== -1 && dIdx > bIdx) {
+      segments = dIdx - bIdx;
+    }
+    const pricePerSeat = segments > 0 ? Math.min(segments * 5, 25) : 0;
     const totalPrice   = pricePerSeat * seatsBooked;
 
     // Check balance (prioritize pass balance)
@@ -157,7 +162,7 @@ router.post("/book/:busId", auth, async (req, res) => {
       });
 
       transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: `"BusFlux" <${process.env.EMAIL_USER}>`,
         to: user.email,
         subject: `BusFlux Ticket Confirmation - #${ticketId}`,
         html: `Hello ${user.name || "Customer"},<br><br>Your bus ticket has been successfully booked! 🚍<br><br>Here are your booking details:<br>------------------------------------------<br>Ticket Number: #${ticketId}<br>Booking ID: ${booking._id}<br>Bus Name: ${bus.busName}<br>Departure: ${bus.departureTime || "N/A"}<br>Arrival: ${bus.arrivalTime || "N/A"}<br>Boarding Point: ${booking.boardingPoint}<br>Dropping Point: ${booking.droppingPoint}<br>Seats Booked: ${booking.seatsBooked}<br>Total Price: ₹${booking.totalPrice}<br>------------------------------------------<br><br><img src="cid:qrCodeImage" /><br><br>Thank you for choosing BusFlux! Have a safe journey! 🚍`,
@@ -190,12 +195,20 @@ router.post("/calculate-price/:busId", auth, async (req, res) => {
     const user     = await User.findById(req.user.id);
     const ageGroup = user?.ageGroup || "";
 
-    const basePrice    = getAgeGroupPrice(bus, ageGroup);
-    const ratio        = getStopRatio(bus, boardingPoint || bus.from, droppingPoint || bus.to);
-    const pricePerSeat = Math.round(basePrice * ratio);
+    const bp = boardingPoint || bus.from;
+    const dp = droppingPoint || bus.to;
+    const allStops = [bus.from, ...(bus.stops || []), bus.to];
+    const bIdx = allStops.findIndex(s => s.toLowerCase() === bp.toLowerCase());
+    const dIdx = allStops.findIndex(s => s.toLowerCase() === dp.toLowerCase());
+    
+    let segments = 0;
+    if (bIdx !== -1 && dIdx !== -1 && dIdx > bIdx) {
+      segments = dIdx - bIdx;
+    }
+    const pricePerSeat = segments > 0 ? Math.min(segments * 5, 25) : 0;
     const totalPrice   = pricePerSeat * seatsBooked;
 
-    res.json({ ageGroup, basePrice, pricePerSeat, totalPrice, ratio });
+    res.json({ ageGroup, basePrice: 25, pricePerSeat, totalPrice, ratio: segments });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

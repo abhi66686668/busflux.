@@ -11,7 +11,7 @@ const auth = require("../middleware/auth");
 router.get("/dashboard", async (req, res) => {
   try {
     const pendingTransactions = await OwnerTransaction.find({ status: "Pending Settlement" })
-      .populate("busId", "busName")
+      .populate("busId", "busName busNumber")
       .populate({
         path: "bookingId",
         select: "scannedBy",
@@ -44,6 +44,7 @@ router.get("/dashboard", async (req, res) => {
         ownerStatsMap[busIdStr] = {
           busId: busIdStr,
           ownerName: tx.busId.busName,
+          busNumber: tx.busId.busNumber,
           bankDetails: bankDetails,
           conductorId: conductorId,
           ticketsSold: 0,

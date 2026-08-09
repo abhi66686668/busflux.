@@ -36,7 +36,7 @@ function checkAuth() {
     loadBookings();
     loadTransactions();
     fetchSettlementsDashboard();
-    loadSettings();
+    fetchProfitHistory();
     const savedPage = sessionStorage.getItem("adminCurrentPage") || "dashboard";
     showPage(savedPage);
   }
@@ -58,7 +58,7 @@ async function adminLogin() {
       document.getElementById("adminPassword").value = "";
       document.getElementById("loginScreen").style.display = "none";
       toast("Welcome back, " + (data.name||"Admin"), "success");
-      loadDashboard(); loadBuses(); loadUsers(); loadConductors(); loadBookings(); loadTransactions(); loadSettings();
+      loadDashboard(); loadBuses(); loadUsers(); loadConductors(); loadBookings(); loadTransactions(); fetchSettlementsDashboard(); fetchProfitHistory(); fetchAdminNotifications();
       const savedPage = sessionStorage.getItem("adminCurrentPage") || "dashboard";
       showPage(savedPage);
     } else {
@@ -72,8 +72,8 @@ async function adminLogin() {
 function adminLogout() {
   adminToken = "";
   localStorage.removeItem("adminToken");
-  document.getElementById("loginScreen").style.display = "flex";
-  toast("Logged out successfully", "info");
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
 }
 
 // ── Page navigation ──
@@ -99,8 +99,8 @@ function showPage(name, btn) {
   }
 
   document.getElementById("topbarTitle").textContent = {
-    dashboard:"Dashboard", buses:"Bus Fleet", users:"Users", conductors:"Conductors", bookings:"Bookings", transactions:"Wallet Transactions", settings: "System Settings"
-  }[name] || "Dashboard";
+    dashboard:"Dashboard", buses:"Bus Fleet", users:"Users", conductors:"Conductors", bookings:"Bookings", transactions:"Wallet Transactions"
+  }[name] || name;
   
   sessionStorage.setItem("adminCurrentPage", name);
 }
@@ -164,7 +164,7 @@ async function loadBuses() {
             <strong>${b.to}</strong>
             <span style="margin-left:auto">₹${b.price}</span>
           </div>
-          ${b.stops?.length ? `<div style="font-size:.75rem;color:var(--muted)"><i class="fas fa-map-pin" style="margin-right:4px"></i>${b.stops.join(' â†’ ')}</div>` : ''}
+          ${b.stops?.length ? `<div style="font-size:.75rem;color:var(--muted)"><i class="fas fa-map-pin" style="margin-right:4px"></i>${b.stops.join(' &rarr; ')}</div>` : ''}
           <div class="bca-staff">
             <div class="staff-mini">
               ${b.driverPhoto ? `<img src="${getImageUrl(b.driverPhoto)}" onerror="this.outerHTML='<div style=width:32px;height:32px;border-radius:50%;background:rgba(99,102,241,.15);display:flex;align-items:center;justify-content:center><i class=fas fa-user style=color:var(--primary);font-size:.8rem></i></div>'" alt="">` : `<div style="width:32px;height:32px;border-radius:50%;background:rgba(99,102,241,.15);display:flex;align-items:center;justify-content:center"><i class="fas fa-user" style="color:var(--primary);font-size:.8rem"></i></div>`}
@@ -258,8 +258,14 @@ async function deleteUser(id, btn) {
 // ── Bookings ──
 async function loadBookings() {
   try {
-    const res       = await fetch(`${API}/admin/bookings`, { headers:{ Authorization:`Bearer ${adminToken}` }});
-    allBookingsData = await res.json();
+    const res = await fetch(`${API}/admin/bookings`, { headers:{ Authorization:`Bearer ${adminToken}` }});
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) return adminLogout();
+      allBookingsData = [];
+    } else {
+      allBookingsData = await res.json();
+      if (!Array.isArray(allBookingsData)) allBookingsData = [];
+    }
     populateConductorFilter();
     filterBookings();
   } catch(e) { console.error(e); }
@@ -413,6 +419,7 @@ function filterBookings() {
       card.style.display = "none";
     }
     
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     renderBookingsTable(filtered);
   } catch (err) {
     console.error("Error filtering bookings:", err);
@@ -436,7 +443,7 @@ function renderBookingsTable(bookings) {
       const ugrp   = b.userId?.ageGroup || "--";
       const bname  = b.busId?.busName || "--";
       const bnum   = b.busId?.busNumber || "";
-      const route  = b.busId ? `${b.busId.from || ""} â†’ ${b.busId.to || ""}` : "--";
+      const route  = b.busId ? `${b.busId.from || ""} <i class="fas fa-arrow-right" style="font-size:0.7rem; color:var(--muted); margin:0 4px;"></i><br>${b.busId.to || ""}` : "--";
       const dateObj = b.createdAt ? new Date(b.createdAt) : null;
       const dateStr = dateObj ? dateObj.toLocaleDateString("en-IN") : "--";
       const timeStr = dateObj ? dateObj.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit', hour12: true }) : "";
@@ -482,6 +489,7 @@ function renderBookingsTable(bookings) {
         <td><span class="badge ${ageBadgeColor[ugrp]||'badge-blue'}">${ugrp}</span></td>
         <td><div>${bname}</div>${bnum?`<div style="font-size:.72rem;color:var(--muted)">${bnum}</div>`:''}</td>
         <td style="font-size:.85rem">${route}</td>
+        <td><span class="badge badge-blue">${b.seatsBooked || 0} seat(s)</span></td>
         <td>${billedByHtml}</td>
         <td style="font-weight:700;color:${isFailed ? 'var(--danger)' : '#a855f7'}">₹${b.totalPrice || 0}</td>
         <td>${statusBadge}</td>
@@ -501,9 +509,23 @@ function renderBookingsTable(bookings) {
 async function loadTransactions() {
   try {
     const res = await fetch(`${API}/admin/transactions`, { headers:{ Authorization:`Bearer ${adminToken}` }});
-    const transactions = await res.json();
+    let transactions = await res.json();
+    transactions = transactions.filter(t => t.userId && t.userId.name && t.userId.name.trim() !== "");
+    
     const tbody = document.getElementById("transactionsBody");
-    if (!transactions.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No transactions found</td></tr>`; return; }
+    const totalBadge = document.getElementById("totalWalletRecharges");
+
+    if (!transactions.length) { 
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No transactions found</td></tr>`; 
+      if(totalBadge) totalBadge.style.display = 'none';
+      return; 
+    }
+    
+    const totalAmount = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    if(totalBadge) {
+      totalBadge.textContent = `Total Recharged: ₹${totalAmount.toLocaleString('en-IN')}`;
+      totalBadge.style.display = 'inline-block';
+    }
     
     tbody.innerHTML = transactions.map(t => {
       const date = new Date(t.createdAt).toLocaleString("en-IN", {
@@ -531,6 +553,48 @@ async function loadTransactions() {
       </tr>`;
     }).join("");
   } catch(e) { console.error("Error loading transactions:", e); }
+}
+
+function filterTransactions() {
+  const input = document.getElementById("transactionFilter");
+  const filter = input.value.toLowerCase();
+  
+  const dateInput = document.getElementById("transactionDateFilter");
+  let filterDateStr = "";
+  if (dateInput && dateInput.value) {
+    const parts = dateInput.value.split("-");
+    const y = parts[0];
+    const m = parts[1];
+    const d = parts[2];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthStr = monthNames[parseInt(m, 10) - 1];
+    filterDateStr = `${d} ${monthStr} ${y}`.toLowerCase();
+  }
+  
+  const tbody = document.getElementById("transactionsBody");
+  const trs = tbody.getElementsByTagName("tr");
+  
+  for (let i = 0; i < trs.length; i++) {
+    const tds = trs[i].getElementsByTagName("td");
+    if (tds.length === 1) continue; // Skip loading or 'no transactions' row
+    
+    let textMatch = false;
+    for (let j = 0; j <= 3; j++) {
+      if (tds[j] && tds[j].innerText.toLowerCase().indexOf(filter) > -1) {
+        textMatch = true;
+        break;
+      }
+    }
+    
+    let dateMatch = true;
+    if (filterDateStr) {
+      if (tds[0] && tds[0].innerText.toLowerCase().indexOf(filterDateStr) === -1) {
+        dateMatch = false;
+      }
+    }
+    
+    trs[i].style.display = (textMatch && dateMatch) ? "" : "none";
+  }
 }
 
 // ── Bus Modal ──
@@ -769,11 +833,19 @@ function renderConductorsGrid() {
         ? `<span class="badge badge-teal" style="margin-top:6px"><i class="fas fa-bus" style="font-size:.65rem;margin-right:4px"></i>${assignedBus.busName}</span>`
         : `<span class="badge badge-orange" style="margin-top:6px"><i class="fas fa-bus" style="font-size:.65rem;margin-right:4px"></i>No Assigned Bus</span>`;
 
+      const isOnline = window.onlineUserIds && window.onlineUserIds.has(c._id);
+      const statusDot = isOnline 
+        ? `<div style="position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--success);border:2px solid var(--card-bg);border-radius:50%;z-index:2;" title="Online (${c._id})"></div>`
+        : `<div style="position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--danger);border:2px solid var(--card-bg);border-radius:50%;z-index:2;" title="Offline (${c._id})"></div>`;
+
       return `
         <div class="user-card">
-          ${c.userPhoto
-            ? `<img class="uc-avatar" src="${getImageUrl(c.userPhoto)}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="">`
-            : `<div class="uc-avatar" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;background:rgba(168,85,247,.15);color:#a855f7">${(c.name||'C')[0].toUpperCase()}</div>`}
+          <div style="position:relative;display:inline-block;flex-shrink:0;">
+            ${c.userPhoto
+              ? `<img class="uc-avatar" src="${getImageUrl(c.userPhoto)}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="">`
+              : `<div class="uc-avatar" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;background:rgba(168,85,247,.15);color:#a855f7">${(c.name||'C')[0].toUpperCase()}</div>`}
+            ${statusDot}
+          </div>
           <div class="uc-info">
             <div class="uc-name">${c.name||'"”'}</div>
             <div class="uc-email">${c.email}</div>
@@ -1027,21 +1099,48 @@ const socket = io(SOCKET_URL);
 
 if (adminToken) {
   fetchAdminNotifications();
-  
-  socket.on('new_admin_notification', (notif) => {
-    // Show toast for immediate alert
-    toast("New Alert: " + notif.message, notif.type || "info");
-    // Fetch updated list
-    fetchAdminNotifications();
+}
+
+socket.on('new_admin_notification', (notif) => {
+  if (!adminToken) return;
+  // Show toast for immediate alert
+  toast("New Alert: " + notif.message, notif.type || "info");
+  // Fetch updated list
+  fetchAdminNotifications();
+});
+
+socket.on('admin_data_updated', () => {
+  if (!adminToken) return;
+  // Silently refresh data
+  loadDashboard();
+  loadTransactions();
+  loadBookings();
+});
+
+const statusBadge = document.getElementById("socketStatusBadge");
+if (socket && statusBadge) {
+  socket.on('connect', () => {
+    statusBadge.className = "topbar-badge";
+    statusBadge.innerHTML = '<i class="fas fa-circle" style="font-size:.5rem"></i> Live';
   });
-  
-  socket.on('admin_data_updated', () => {
-    // Silently refresh data
-    loadDashboard();
-    loadTransactions();
-    loadBookings();
+  socket.on('disconnect', () => {
+    statusBadge.className = "topbar-badge offline";
+    statusBadge.innerHTML = '<i class="fas fa-circle" style="font-size:.5rem"></i> Offline';
+  });
+  socket.on('connect_error', () => {
+    statusBadge.className = "topbar-badge offline";
+    statusBadge.innerHTML = '<i class="fas fa-circle" style="font-size:.5rem"></i> Offline';
   });
 }
+
+window.onlineUserIds = new Set();
+socket.on('online_users_update', (usersArray) => {
+  window.onlineUserIds = new Set(usersArray);
+  console.log("online_users_update:", usersArray);
+  const dbg = document.getElementById("debugOnlineUsers");
+  if (dbg) dbg.innerText = "Online: " + JSON.stringify(usersArray);
+  renderConductorsGrid();
+});
 
 // ================= THEME TOGGLE =================
 function initTheme() {
@@ -1061,104 +1160,10 @@ function toggleTheme() {
   localStorage.setItem('theme', newTheme);
   const icon = document.getElementById('themeIcon');
   if (icon) {
-    icon.className = newTheme === 'light' ? 'fas fa-sun theme-icon' : 'fas fa-moon theme-icon';
+    icon.classList.remove('spin');
+    void icon.offsetWidth; // trigger reflow
+    icon.className = newTheme === 'light' ? 'fas fa-sun theme-icon spin' : 'fas fa-moon theme-icon spin';
     icon.style.color = newTheme === 'light' ? '#f59e0b' : '#6366f1';
-  }
-}
-
-document.addEventListener("DOMContentLoaded", initTheme);
-
-// ================= SETTINGS =================
-async function loadSettings() {
-  try {
-    const res = await fetch(`${API}/settings/paymentQRCode`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.value) {
-        document.getElementById("adminQrPreview").src = data.value;
-        document.getElementById("adminQrPreview").style.display = "block";
-        document.getElementById("adminQrIcon").style.display = "none";
-        document.getElementById("adminQrText").textContent = "Click to change QR Code";
-      }
-    }
-  } catch (e) {
-    console.error("Failed to load settings", e);
-  }
-}
-
-function previewAdminQr(input) {
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      document.getElementById("adminQrPreview").src = e.target.result;
-      document.getElementById("adminQrPreview").style.display = "block";
-      document.getElementById("adminQrIcon").style.display = "none";
-      document.getElementById("adminQrText").textContent = "Click to change QR Code";
-    }
-    reader.readAsDataURL(input.files[0]);
-  }
-}
-
-function toggleQrSource() {
-  const source = document.querySelector('input[name="qrSource"]:checked').value;
-  if (source === 'upload') {
-    document.getElementById('qrUploadSection').style.display = 'block';
-    document.getElementById('qrGenerateSection').style.display = 'none';
-  } else {
-    document.getElementById('qrUploadSection').style.display = 'none';
-    document.getElementById('qrGenerateSection').style.display = 'block';
-  }
-}
-
-async function saveAdminSettings() {
-  const source = document.querySelector('input[name="qrSource"]:checked').value;
-  const formData = new FormData();
-  
-  if (source === 'upload') {
-    const fileInput = document.getElementById("adminQrUpload");
-    if (!fileInput.files || !fileInput.files[0]) {
-      return toast("Please select a QR code image to upload.", "warning");
-    }
-    formData.append("qrCode", fileInput.files[0]);
-  } else {
-    const upiId = document.getElementById("adminUpiId").value.trim();
-    if (!upiId) return toast("Please enter a UPI ID.", "warning");
-    
-    let name = document.getElementById("adminUpiName").value.trim();
-    if (!name) name = "BusFlux";
-    
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(name)}`;
-    formData.append("qrUrl", qrUrl);
-  }
-  
-  const btn = document.querySelector(".btn-save");
-  const oldText = btn.innerHTML;
-  btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
-  btn.disabled = true;
-  
-  try {
-    const res = await fetch(`${API}/settings/payment-qr`, {
-      method: "PUT",
-      headers: { "Authorization": `Bearer ${adminToken}` },
-      body: formData // if it doesn't contain a file, it's just a multipart request with fields
-    });
-    const data = await res.json();
-    if (res.ok) {
-      toast(data.message || "Settings saved successfully", "success");
-      if (source === 'generate') {
-        document.getElementById("adminQrPreview").src = data.value;
-        document.getElementById("adminQrPreview").style.display = "block";
-        document.getElementById("adminQrIcon").style.display = "none";
-        document.getElementById("adminQrText").textContent = "Click to change QR Code";
-      }
-    } else {
-      toast(data.message || "Failed to save settings", "error");
-    }
-  } catch (e) {
-    toast("Network error. Failed to save.", "error");
-  } finally {
-    btn.innerHTML = oldText;
-    btn.disabled = false;
   }
 }
 
@@ -1171,6 +1176,7 @@ async function fetchSettlementsDashboard() {
     });
     const data = await res.json();
     if (data.success) {
+      window.currentPendingSettlements = data.data.ownerStats;
       try {
         const setRes = await fetch(`${API}/settings/commissionPercentage`);
         if (setRes.ok) {
@@ -1189,16 +1195,37 @@ async function fetchSettlementsDashboard() {
       if (!tbody) return;
       tbody.innerHTML = '';
       if (data.data.ownerStats.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">No pending settlements</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">No pending settlements</td></tr>`;
       } else {
         data.data.ownerStats.forEach(stat => {
           tbody.innerHTML += `
             <tr>
-              <td><div style="font-weight:600">${stat.ownerName || 'Unknown Owner'}</div></td>
+              <td>
+                <div style="font-weight:600">${stat.ownerName || 'Unknown Owner'}</div>
+                ${stat.bankDetails ? `
+                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;">
+                    ${stat.bankDetails.bankName ? `<strong>Bank:</strong> ${stat.bankDetails.bankName}<br>` : ''}
+                    ${stat.bankDetails.accountNumber ? `<strong>A/C:</strong> ${stat.bankDetails.accountNumber}<br>` : ''}
+                    ${stat.bankDetails.ifscCode ? `<strong>IFSC:</strong> ${stat.bankDetails.ifscCode}<br>` : ''}
+                    ${stat.bankDetails.upiId ? `<strong>UPI:</strong> ${stat.bankDetails.upiId}` : ''}
+                  </div>
+                ` : `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">No Bank Info</div>`}
+              </td>
               <td>${stat.ticketsSold}</td>
               <td>₹${stat.totalSales}</td>
               <td style="color:var(--warning)">₹${stat.commission}</td>
               <td style="color:var(--success); font-weight:700">₹${stat.payableAmount}</td>
+              <td style="display: flex; gap: 8px;">
+                <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--primary-light); color: var(--primary); width: auto; min-width: 80px;" onclick="viewSettlementDetails('${stat.busId}', '${stat.ownerName}')">
+                  <i class="fas fa-eye"></i> View
+                </button>
+                <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success-light); color: var(--success); width: auto; min-width: 90px;" onclick="downloadSettlementPDF('${stat.ownerName}', '${stat.totalSales}', '${stat.commission}', '${stat.payableAmount}', '${stat.busNumber || ''}')">
+                  <i class="fas fa-download"></i> Download
+                </button>
+                <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success); color: white; width: auto; min-width: 80px;" onclick="generateSingleSettlement('${stat.busId}', '${stat.ownerName}')">
+                  <i class="fas fa-money-check-dollar"></i> Pay
+                </button>
+              </td>
             </tr>
           `;
         });
@@ -1210,6 +1237,70 @@ async function fetchSettlementsDashboard() {
   } catch (err) {
     console.error("Error fetching settlements:", err);
   }
+}
+
+let allProfitHistory = [];
+
+async function fetchProfitHistory() {
+  if (!adminToken) return;
+  try {
+    const res = await fetch(`${API}/admin/profit-history`, {
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      allProfitHistory = data.data;
+      
+      const filterInput = document.getElementById('profitMonthFilter');
+      if (!filterInput.value) {
+        const now = new Date();
+        filterInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      }
+      filterProfitHistory();
+    }
+  } catch (err) {
+    console.error("Error fetching profit history:", err);
+  }
+}
+
+function filterProfitHistory() {
+  const tbody = document.getElementById("profitHistoryBody");
+  if (!tbody) return;
+  
+  const filterInput = document.getElementById('profitMonthFilter').value;
+  let filteredData = allProfitHistory;
+  
+  if (filterInput) {
+    const [year, month] = filterInput.split('-');
+    filteredData = allProfitHistory.filter(tx => {
+      const d = new Date(tx.updatedAt);
+      return d.getFullYear() === parseInt(year) && (d.getMonth() + 1) === parseInt(month);
+    });
+  }
+  
+  let totalThisMonth = 0;
+  tbody.innerHTML = '';
+  
+  if (filteredData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">No platform profit history found for selected month</td></tr>`;
+  } else {
+    filteredData.forEach(tx => {
+      totalThisMonth += (tx.commissionAmount || 0);
+      const dateStr = new Date(tx.updatedAt).toLocaleDateString();
+      const busName = (tx.busId && (tx.busId.busName || tx.busId.name)) || 'Unknown Bus';
+      const busNum = (tx.busId && (tx.busId.busNumber || tx.busId.route_code)) || 'N/A';
+      tbody.innerHTML += `
+        <tr>
+          <td>${dateStr}</td>
+          <td>${busName}</td>
+          <td><span class="badge" style="background:var(--bg-body);color:var(--text);">${busNum}</span></td>
+          <td style="font-weight:600">₹${tx.ticketAmount || 0}</td>
+          <td style="font-weight:700;color:var(--success)">+₹${tx.commissionAmount || 0}</td>
+        </tr>
+      `;
+    });
+  }
+  document.getElementById('profitTotalCommissionThisMonth').innerText = `Total for selected month: ₹${totalThisMonth}`;
 }
 
 async function fetchSettlementHistory() {
@@ -1228,6 +1319,7 @@ async function fetchSettlementHistory() {
         const date = new Date(item.createdAt).toLocaleDateString('en-IN', {
           year: 'numeric', month: 'short', day: 'numeric',
           hour: '2-digit', minute:'2-digit'
+        });
         const busName = (item.busId && (item.busId.busName || item.busId.name)) || 'Unknown Bus';
         const busNum = (item.busId && (item.busId.busNumber || item.busId.route_code)) || '';
         
@@ -1240,11 +1332,16 @@ async function fetchSettlementHistory() {
             <td style="color:var(--warning)">₹${item.commission}</td>
             <td style="color:var(--success); font-weight:700">₹${item.payableAmount}</td>
             <td><span class="status-badge" style="background:var(--success);color:#fff">${item.paymentStatus}</span></td>
+            <td>
+              <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success-light); color: var(--success); width: auto; min-width: 90px;" onclick="downloadHistoricalSummary('${busName}', '${item.month}', '${item.totalSales}', '${item.commission}', '${item.payableAmount}', '${date}', '${busNum}')">
+                <i class="fas fa-download"></i> Download
+              </button>
+            </td>
           </tr>
         `;
       });
     } else {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">No settlement history available</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">No settlement history available</td></tr>`;
     }
   } catch(e) {
     console.error("Error fetching settlement history:", e);
@@ -1262,6 +1359,47 @@ function toggleSettlementHistory() {
   } else {
     section.style.display = 'none';
   }
+}
+
+function downloadHistoricalSummary(busName, month, totalSales, commission, paidAmount, dateStr, busNumber = "") {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  const finishPDF = () => {
+    doc.setFontSize(22);
+    doc.setTextColor(45, 55, 120);
+    doc.text("Settlement History Receipt", 40, 28);
+    
+    const busDisplay = busNumber ? `${busName}\n(${busNumber})` : busName;
+    
+    doc.autoTable({
+      startY: 45,
+      head: [['DATE', 'BUS', 'MONTH', 'TOTAL SALES', 'COMMISSION', 'PAID']],
+      body: [
+        [dateStr, busDisplay, month, `Rs ${totalSales}`, `-Rs ${commission}`, `Rs ${paidAmount}`]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [38, 137, 132], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+      bodyStyles: { halign: 'center', fontSize: 11, cellPadding: 8, textColor: [50, 50, 50] },
+      columnStyles: { 
+        1: { halign: 'left' }
+      }
+    });
+    
+    const safeMonth = month.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    doc.save(`Settlement_History_${busName.replace(/\s+/g, '_')}_${safeMonth}.pdf`);
+    toast("PDF Summary downloaded!", "success");
+  };
+
+  const img = new Image();
+  img.src = 'icons/icon-192x192.png';
+  img.onload = () => {
+    doc.addImage(img, 'PNG', 14, 15, 20, 20);
+    finishPDF();
+  };
+  img.onerror = () => {
+    finishPDF();
+  };
 }
 
 async function editCommissionRate() {
@@ -1282,6 +1420,7 @@ async function editCommissionRate() {
     if (res.ok) {
       toast("Commission rate updated!", "success");
       document.getElementById('commissionRateDisplay').innerText = `(${data.value}%)`;
+      fetchSettlementsDashboard();
     } else {
       toast(data.message || "Failed to update", "error");
     }
@@ -1292,6 +1431,39 @@ async function editCommissionRate() {
 
 async function generateSettlement() {
   if (!adminToken) return;
+  
+  if (window.currentPendingSettlements && window.currentPendingSettlements.length > 0) {
+    const missingBankDetails = window.currentPendingSettlements.filter(stat => {
+      if (!stat.bankDetails) return true;
+      const bd = stat.bankDetails;
+      const hasUpi = !!bd.upiId;
+      const hasBank = bd.bankName && bd.accountNumber && bd.ifscCode;
+      return !hasUpi && !hasBank;
+    });
+
+    if (missingBankDetails.length > 0) {
+      const names = missingBankDetails.map(s => s.ownerName || 'Unknown Owner').join(", ");
+      const wantToRemind = confirm(`Cannot generate settlement!\n\nThe following buses are missing bank or UPI details:\n- ${names}\n\nWould you like to send an automatic notification to their conductors right now to remind them to fill in their Payout/Bank Details?`);
+      
+      if (wantToRemind) {
+        let sent = 0;
+        for (let stat of missingBankDetails) {
+          if (stat.conductorId) {
+            try {
+              await fetch(`${API}/admin/remind-bank-details/${stat.conductorId}`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${adminToken}` }
+              });
+              sent++;
+            } catch(e) { console.error("Error sending reminder:", e); }
+          }
+        }
+        toast(`Sent ${sent} reminder notification(s) to conductors!`, "success");
+      }
+      return;
+    }
+  }
+
   if (!confirm("Are you sure you want to generate settlement and mark all pending owner earnings as Paid?")) return;
   
   try {
@@ -1311,3 +1483,154 @@ async function generateSettlement() {
     toast("Network error while generating settlement", "error");
   }
 }
+
+async function generateSingleSettlement(busId, ownerName) {
+  if (!adminToken) return;
+  
+  if (window.currentPendingSettlements) {
+    const stat = window.currentPendingSettlements.find(s => s.busId === busId);
+    if (stat && (!stat.bankDetails || (!stat.bankDetails.upiId && (!stat.bankDetails.bankName || !stat.bankDetails.accountNumber)))) {
+      const wantToRemind = confirm(`Cannot generate settlement!\n\n${ownerName || 'This owner'} is missing bank or UPI details.\n\nWould you like to send an automatic notification to the conductor right now to remind them to fill in their Payout/Bank Details?`);
+      
+      if (wantToRemind && stat.conductorId) {
+        try {
+          await fetch(`${API}/admin/remind-bank-details/${stat.conductorId}`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${adminToken}` }
+          });
+          toast(`Sent reminder notification to ${ownerName}'s conductor!`, "success");
+        } catch(e) { console.error("Error sending reminder:", e); }
+      }
+      return;
+    }
+  }
+
+  if (!confirm(`Are you sure you want to generate settlement and mark pending earnings as Paid for ${ownerName}?`)) return;
+  
+  try {
+    const res = await fetch(`${API}/settlement/generate/${busId}`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast(`Settlement Generated for ${ownerName}!`, "success");
+      fetchSettlementsDashboard();
+    } else {
+      toast(data.message || "Failed to generate settlement", "error");
+    }
+  } catch (err) {
+    console.error("Error generating single settlement:", err);
+    toast("Network error while generating settlement", "error");
+  }
+}
+
+function closeSettlementDetailsModal() {
+  document.getElementById('settlementDetailsModal').classList.remove('open');
+}
+
+async function viewSettlementDetails(busId, ownerName) {
+  if (!adminToken) return;
+  document.getElementById('sd_modalTitle').innerText = `Transactions for ${ownerName}`;
+  document.getElementById('settlementDetailsModal').classList.add('open');
+  const tbody = document.getElementById('sd_tbody');
+  tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">Loading...</td></tr>';
+  
+  try {
+    const res = await fetch(`${API}/settlement/transactions/${busId}`, {
+      headers: { "Authorization": `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      tbody.innerHTML = '';
+      if (data.transactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No transactions found</td></tr>';
+      } else {
+        data.transactions.forEach(tx => {
+          const dateStr = new Date(tx.bookingDate).toLocaleString();
+          let passengerName = 'N/A';
+          let seats = '-';
+          let ticketId = '-';
+          let route = 'N/A';
+          let conductorName = 'Online/Self';
+
+          if (tx.bookingId) {
+             passengerName = (tx.bookingId.userId && tx.bookingId.userId.name) ? tx.bookingId.userId.name : 'Guest / Unknown';
+             seats = tx.bookingId.seatsBooked || '-';
+             ticketId = tx.bookingId._id ? tx.bookingId._id.toString().slice(-8).toUpperCase() : '-';
+             route = `${tx.bookingId.boardingPoint || 'Unknown'} ➔ ${tx.bookingId.droppingPoint || 'Unknown'}`;
+             
+             if (tx.bookingId.scannedBy && tx.bookingId.scannedBy.name) {
+               conductorName = tx.bookingId.scannedBy.name;
+             }
+          }
+
+          tbody.innerHTML += `
+            <tr>
+              <td><div style="font-size:0.85rem;color:var(--muted)">${dateStr}</div></td>
+              <td><div style="font-weight:700; color:var(--primary)">#${ticketId}</div></td>
+              <td><div style="font-weight:600">${passengerName}</div></td>
+              <td><div style="font-size:0.85rem">${route}</div></td>
+              <td><div style="font-weight:500">${conductorName}</div></td>
+              <td><span class="badge badge-blue" style="font-size:0.8rem">${seats}</span></td>
+              <td>₹${tx.ticketAmount}</td>
+              <td style="color:var(--warning)">₹${tx.commissionAmount}</td>
+              <td style="color:var(--success); font-weight:700">₹${tx.ownerAmount}</td>
+            </tr>
+          `;
+        });
+      }
+    } else {
+      toast("Failed to load details", "error");
+    }
+  } catch (err) {
+    console.error(err);
+    toast("Network error loading details", "error");
+  }
+}
+
+function downloadSettlementPDF(ownerName, totalSales, commission, paidAmount, busNumber = "") {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  const finishPDF = () => {
+    const dateStr = new Date().toLocaleDateString();
+    
+    doc.setFontSize(22);
+    doc.setTextColor(45, 55, 120);
+    doc.text("Settlement Receipt", 40, 28);
+    
+    const busDisplay = busNumber ? `${ownerName}\n(${busNumber})` : ownerName;
+    
+    doc.autoTable({
+      startY: 45,
+      head: [['DATE', 'BUS', 'TOTAL SALES', 'COMMISSION', 'PAYABLE (PAID)']],
+      body: [
+        [dateStr, busDisplay, `Rs ${totalSales}`, `-Rs ${commission}`, `Rs ${paidAmount}`]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [38, 137, 132], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+      bodyStyles: { halign: 'center', fontSize: 11, cellPadding: 8, textColor: [50, 50, 50] },
+      columnStyles: { 
+        1: { halign: 'left' }
+      }
+    });
+    
+    doc.save(`Settlement_Receipt_${ownerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast("PDF Receipt downloaded!", "success");
+  };
+
+  const img = new Image();
+  img.src = 'icons/icon-192x192.png';
+  img.onload = () => {
+    doc.addImage(img, 'PNG', 14, 15, 20, 20);
+    finishPDF();
+  };
+  img.onerror = () => {
+    finishPDF();
+  };
+}
+
+document.addEventListener("DOMContentLoaded", initTheme);
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js">

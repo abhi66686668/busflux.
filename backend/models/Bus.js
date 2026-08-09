@@ -3,8 +3,10 @@ const mongoose = require("mongoose");
 const busSchema = new mongoose.Schema({
 
   // ── Basic Info ──
-  busName: { type: String, required: true },
-  busNumber: { type: String, required: true, unique: true },
+  busName: { type: String },
+  name: { type: String }, // To handle DB inconsistencies where name is used instead of busName
+  route_code: { type: String },
+  busNumber: { type: String, unique: true, sparse: true },
   busPhoto: { type: String, default: "" },
 
   // ── Route ──

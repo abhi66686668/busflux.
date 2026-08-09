@@ -9,6 +9,7 @@ const User =
 const Transaction = require("../models/Transaction");
 const Booking = require("../models/Booking");
 const Notification = require("../models/Notification");
+const SupportTicket = require("../models/SupportTicket");
 
 const bcrypt =
   require("bcryptjs");
@@ -142,7 +143,7 @@ router.post(
       let emailSent = true;
       try {
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: `"BusFlux" <${process.env.EMAIL_USER}>`,
           to: email,
           subject: "BusFlux OTP Verification",
           text: `Your BusFlux OTP is ${otp}`
@@ -486,7 +487,7 @@ try {
 // WELCOME EMAIL (fire-and-forget — do NOT await so registration always succeeds)
 transporter.sendMail({
 
-  from: process.env.EMAIL_USER,
+  from: `"BusFlux" <${process.env.EMAIL_USER}>`,
 
   to: email,
 
@@ -593,8 +594,7 @@ router.post(
       // LOGIN EMAIL (asynchronous, non-blocking)
       transporter.sendMail({
 
-        from:
-          process.env.EMAIL_USER,
+        from: `"BusFlux" <${process.env.EMAIL_USER}>`,
 
         to:
           user.email,
@@ -713,7 +713,7 @@ router.post(
       let emailSent = true;
       try {
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: `"BusFlux" <${process.env.EMAIL_USER}>`,
           to: email,
           subject: "BusFlux Password Reset OTP",
           text: `Your password reset OTP is ${otp}`
@@ -993,10 +993,16 @@ router.post("/wallet/verify-payment", auth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    let bonusPercent = 0.10;
-    let passName = "Standard Pass";
+    let bonus = Math.round(rechargeAmount * bonusPercent);
+    
+    // First recharge bonus
+    let isFirstRecharge = false;
+    const pastRecharges = await Transaction.countDocuments({ userId: user._id });
+    if (pastRecharges === 0) {
+      bonus += 100;
+      isFirstRecharge = true;
+    }
 
-    const bonus = Math.round(rechargeAmount * bonusPercent);
     const totalCredit = rechargeAmount + bonus;
 
     user.balance = (user.balance || 0) + totalCredit;
@@ -1096,6 +1102,15 @@ router.put("/notifications/read", auth, async (req, res) => {
     res.status(200).json({ message: "Notifications marked as read" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/my-support", auth, async (req, res) => {
+  try {
+    const tickets = await SupportTicket.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, tickets });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

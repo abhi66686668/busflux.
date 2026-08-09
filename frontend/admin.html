@@ -53,10 +53,33 @@
       color: #1e293b !important;
       border-color: rgba(0,0,0,0.2) !important;
     }
+    [data-theme="light"] .f-group select option {
+      background: #ffffff;
+      color: #1e293b;
+    }
     
     [data-theme="light"] .stat-card {
       box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      border: 1px solid rgba(0,0,0,0.05);
+      border-radius: 20px;
     }
+    [data-theme="light"] .stat-card::before { display: none; }
+    [data-theme="light"] .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+    [data-theme="light"] .stat-icon.purple { background: #EAE6FF; color: #6366f1; border-radius: 16px; }
+    [data-theme="light"] .stat-icon.green { background: #E0F5EB; color: #10b981; border-radius: 16px; }
+    [data-theme="light"] .stat-icon.orange { background: #FFF1DA; color: #f59e0b; border-radius: 16px; }
+    [data-theme="light"] .stat-icon.blue { background: #E1F3FB; color: #0ea5e9; border-radius: 16px; }
+    [data-theme="light"] .topbar { background: #ffffff; border-bottom: none; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    [data-theme="light"] .topbar-badge { background: #e0f5eb; border-color: #a7f3d0; color: #10b981; }
+    [data-theme="light"] .sb-logo span { background: none; -webkit-text-fill-color: initial; color: #6366f1; }
+    [data-theme="light"] .sb-logo i { background: #EAE6FF; color: #6366f1; padding: 10px; border-radius: 12px; font-size: 1.2rem; }
+    [data-theme="light"] .sb-item.active { background: #F3F0FF; color: #6366f1; }
+    [data-theme="light"] .sb-item:hover:not(.active) { background: #f8fafc; color: #1e293b; }
+    [data-theme="light"] .sb-item { color: #475569; }
+    [data-theme="light"] .sb-section-label { border-top: 1px solid rgba(0,0,0,0.05); padding-top: 16px; margin-top: 8px; }
+    [data-theme="light"] .sb-section-label:first-of-type { border-top: none; padding-top: 12px; margin-top: 0; }
+    [data-theme="light"] .admin-badge { background: #F3F0FF; border: none; }
+    [data-theme="light"] .admin-avatar { background: #EAE6FF !important; color: #6366f1 !important; }
     
     [data-theme="light"] .bus-card-admin, 
     [data-theme="light"] .user-card {
@@ -186,6 +209,9 @@
     .sec-head h2{font-size:1.1rem;font-weight:700}
     .btn-add{padding:9px 18px;background:var(--grad);border:none;border-radius:9px;color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:var(--tr)}
     .btn-add:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(99,102,241,.3)}
+    .btn-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:7px;font-family:inherit;font-weight:600;cursor:pointer;transition:var(--tr);white-space:nowrap;text-align:center}
+    .btn-action:hover{opacity:0.9;transform:translateY(-1px)}
+    .btn-action:active{transform:translateY(0)}
 
     /* ── TABLE ── */
     .table-wrap{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -238,7 +264,7 @@
       color:var(--text);border-radius:9px;font-size:.88rem;font-family:inherit;transition:var(--tr);width:100%;
     }
     .f-group input:focus,.f-group select:focus,.f-group textarea:focus{outline:none;border-color:rgba(99,102,241,.4);box-shadow:0 0 0 3px rgba(99,102,241,.08)}
-    .f-group select option{background:#0d1326}
+    .f-group select option{background:#0d1326; color:#ffffff;}
     .f-group textarea{resize:vertical;min-height:60px}
     .modal-divider{grid-column:1/-1;height:1px;background:rgba(255,255,255,.06);margin:6px 0}
     .modal-section-label{grid-column:1/-1;font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:8px}
@@ -310,17 +336,40 @@
     .empty i{font-size:2.5rem;opacity:.3;margin-bottom:12px}
     .empty p{font-size:.9rem}
 
+    /* ── DASHBOARD CHARTS RESPONSIVE ── */
+    .chart-grid { display: grid; gap: 20px; margin-top: 20px; }
+    .chart-grid-2-1 { grid-template-columns: 2fr 1fr; }
+    .chart-grid-1-1 { grid-template-columns: 1fr 1fr; }
+    .chart-grid-1-2 { grid-template-columns: 1fr 2fr; }
+    
     /* ── RESPONSIVE ── */
     #sidebar {
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    @media(max-width:1024px){
-      #sidebar{transform:translateX(-100%); z-index:1000;}
-      #sidebar.open{transform:translateX(0); box-shadow: 4px 0 25px rgba(0,0,0,0.5);}
-      #main{margin-left:0}
+    #sidebarBackdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 990;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    #sidebarBackdrop.open { opacity: 1; pointer-events: auto; }
+    .bottom-nav { display: none; }
+    .sidebar-close-btn { display: none; }
+    
+    @media(max-width:768px){
+      .modal { padding: 24px; width: 95%; }
+      .f-group input, .f-group select, .f-group textarea { font-size: 16px; } /* Prevents iOS auto-zoom */
       .form-grid-2,.form-grid-3{grid-template-columns:1fr}
       .full-col{grid-column:1}
+    }
+    
+    @media(max-width:1024px){
+      .chart-grid-2-1, .chart-grid-1-1, .chart-grid-1-2 { grid-template-columns: 1fr; }
+      #sidebar{transform:translateX(-100%); z-index:1000; width: 85vw; max-width: 320px; border-radius: 0 20px 20px 0;}
+      #sidebar.open{transform:translateX(0); box-shadow: 4px 0 25px rgba(0,0,0,0.5);}
+      #main{margin-left:0}
       .sidebar-toggle{display:block}
+      .sidebar-close-btn { display: flex; position: absolute; right: 15px; top: 20px; background: rgba(0,0,0,0.05); border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; transition: var(--tr); }
+      [data-theme="dark"] .sidebar-close-btn { background: rgba(255,255,255,0.1); }
+      .sb-logo { padding-right: 60px; }
     }
     @media(max-width:576px){
       .topbar{padding:12px 16px}
@@ -328,10 +377,95 @@
       .stat-grid{grid-template-columns:1fr; gap:12px}
       .sec-head{flex-direction:column; align-items:stretch; gap:10px}
       .sec-head .btn-add{width:100%; justify-content:center}
-      .modal{padding:20px; width:95%}
+      .modal{padding:16px; width:100%; border-radius:16px; max-height: 88vh; overflow-y: auto;}
+      .modal-actions { flex-direction: column; width: 100%; gap: 12px; }
+      .modal-actions button { width: 100%; justify-content: center; padding: 12px; }
+      .modal-overlay { padding: 12px; }
       .login-box{padding:24px 20px; width:90%}
       .bca-actions{flex-direction:column}
       .bca-staff{grid-template-columns:1fr; gap:12px}
+      
+      /* Bottom Nav Styles */
+      .bottom-nav { 
+        display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+        background: var(--card-bg); border-top: 1px solid var(--card-border);
+        justify-content: space-around; align-items: center; padding: 10px 5px 20px 5px;
+        backdrop-filter: blur(10px);
+      }
+      .bn-item {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: none; border: none; color: var(--muted); cursor: pointer; gap: 4px;
+        flex: 1; padding: 5px; transition: var(--tr);
+      }
+      .bn-item i { font-size: 1.3rem; margin-bottom: 2px;}
+      .bn-item span { font-size: 0.65rem; font-weight: 500; }
+      .bn-item.active { color: var(--primary); }
+      #main { padding-bottom: 75px; }
+    }
+    /* --- NEW DASHBOARD UI --- */
+    .search-bar-container { display: flex; gap: 10px; margin-bottom: 24px; }
+    .search-input-wrapper { flex: 1; position: relative; }
+    .search-input-wrapper i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    .search-input-wrapper input { width: 100%; padding: 14px 16px 14px 44px; border: 1px solid var(--card-border); border-radius: 12px; background: var(--card-bg); color: var(--text); font-size: 0.95rem; }
+    .search-input-wrapper input:focus { outline: none; border-color: var(--primary); }
+    .filter-btn { padding: 0 16px; border: 1px solid var(--card-border); border-radius: 12px; background: var(--card-bg); color: var(--muted); cursor: pointer; transition: 0.3s; }
+    
+    .mobile-section-header { display: flex; justify-content: space-between; align-items: center; margin: 24px 0 12px; }
+    .mobile-section-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin: 24px 0 12px; }
+    .mobile-section-header .mobile-section-title { margin: 0; }
+    .view-all-link { font-size: 0.85rem; font-weight: 600; color: var(--primary); text-decoration: none; }
+    
+    .mobile-scroll-row { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; justify-content: space-between; }
+    .mobile-scroll-row::-webkit-scrollbar { display: none; }
+    
+    .stat-card-new { flex: 1 0 140px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px 15px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+    .stat-icon-new { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 12px; }
+    .stat-icon-new.purple { background: #EAE6FF; color: #6366f1; }
+    .stat-label-new { font-size: 0.75rem; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+    .stat-val-new { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+    .stat-subtext { font-size: 0.7rem; font-weight: 600; }
+    .stat-subtext.green { color: var(--success); }
+    
+    .quick-action-btn { flex: 0 0 110px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+    .quick-action-btn:active { transform: scale(0.95); }
+    .qa-icon { width: 44px; height: 44px; border-radius: 50%; background: #EAE6FF; color: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 10px; }
+    .qa-label { font-size: 0.75rem; font-weight: 600; color: var(--text); line-height: 1.2; }
+    
+    .tx-list { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+    .tx-item { display: flex; align-items: center; gap: 15px; padding: 16px; border-bottom: 1px solid var(--card-border); }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .tx-icon.green { background: #E0F5EB; color: #10b981; }
+    .tx-icon.red { background: #FEE2E2; color: #EF4444; }
+    .tx-info { flex: 1; min-width: 0; }
+    .tx-title { font-size: 0.9rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .tx-subtitle { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tx-meta { text-align: right; }
+    .tx-amount { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+    .tx-amount.positive { color: var(--success); }
+    .tx-amount.negative { color: #EF4444; }
+    .tx-date { font-size: 0.7rem; color: var(--muted); }
+    
+    .perf-banner { margin-top: 24px; background: #EAE6FF; border-radius: 16px; padding: 20px; display: flex; align-items: center; position: relative; overflow: hidden; }
+    .perf-banner::before { content: '\f200'; font-family: "Font Awesome 6 Free"; font-weight: 900; position: absolute; left: -20px; top: 50%; transform: translateY(-50%); font-size: 8rem; color: rgba(99,102,241,0.1); }
+    .perf-banner-content { position: relative; z-index: 1; padding-left: 20px; }
+    .perf-title { font-size: 1rem; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+    .perf-subtitle { font-size: 0.8rem; color: #475569; margin-bottom: 16px; line-height: 1.4; }
+    .perf-btn { background: #ffffff; color: var(--primary); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    
+    [data-theme="light"] .bn-item.active { background: #F3F0FF; border-radius: 16px; padding: 6px 0; margin: 4px; color: #6366f1; flex-direction: column; justify-content: center; }
+    
+    @media (max-width: 576px) {
+      .topbar-mobile-logo { display: flex; align-items: center; gap: 8px; position: absolute; left: 50%; transform: translateX(-50%); }
+      .topbar-mobile-logo i { background: #EAE6FF; color: #6366f1; padding: 8px; border-radius: 10px; font-size: 1rem; }
+      .topbar-mobile-logo div { display: flex; flex-direction: column; }
+      .topbar-mobile-logo span { font-size: 1rem; font-weight: 800; color: var(--primary); line-height: 1; }
+      .topbar-mobile-logo small { font-size: 0.6rem; color: var(--muted); }
+      .topbar-title { display: none; }
+      .sidebar-toggle { background: #F3F0FF; color: var(--primary); border-radius: 10px; padding: 8px 12px; }
+    }
+    @media (min-width: 577px) {
+      .topbar-mobile-logo { display: none; }
     }
   </style>
 
@@ -367,7 +501,9 @@
 </div>
 
 <!-- â•â•â•â•â•â•â•â•â•â•â• SIDEBAR â•â•â•â•â•â•â•â•â•â•â• -->
+<div id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 <nav id="sidebar">
+  <button class="sidebar-close-btn" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
   <div class="sb-logo">
     <i class="fas fa-bus-alt"></i>
     <div><span>BusFlux</span><small>Admin Panel</small></div>
@@ -383,15 +519,23 @@
     <button class="sb-item" onclick="showPage('transactions',this)"><i class="fas fa-wallet"></i> Transactions</button>
     <button class="sb-item" onclick="showPage('settlements',this)"><i class="fas fa-file-invoice-dollar"></i> Settlements</button>
     <button class="sb-item" onclick="showPage('profit',this)"><i class="fas fa-chart-line"></i> Platform Commission</button>
+    <button class="sb-item" onclick="showPage('support',this)"><i class="fas fa-headset"></i> Support Tickets</button>
   </div>
   <div class="sb-bottom">
-    <div class="admin-badge">
-      <div class="admin-avatar">A</div>
+    <div class="admin-badge" style="background: rgba(99,102,241,.08); cursor: pointer; position: relative;" onclick="toggleAdminProfileMenu(event)">
+      <div class="admin-avatar" style="color: var(--primary); background: rgba(99,102,241,.15);"><i class="fas fa-user"></i></div>
       <div class="admin-info">
-        <div class="name" id="adminNameDisplay">Administrator</div>
-        <div class="role">Super Admin</div>
+        <div class="name" id="adminNameDisplay">Admin User</div>
+        <div class="role" id="adminEmailDisplay" style="text-transform: lowercase;">admin@busflux.com</div>
       </div>
-      <button class="logout-sb" onclick="adminLogout()" title="Logout"><i class="fas fa-right-from-bracket"></i></button>
+      <button class="logout-sb" style="color: var(--muted);"><i class="fas fa-chevron-right"></i></button>
+      
+      <!-- Profile Menu -->
+      <div id="adminProfileMenu" style="display: none; position: absolute; bottom: calc(100% + 10px); left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 8px 0; z-index: 100;">
+        <div style="padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--danger); font-weight: 600; font-size: 0.9rem;" onclick="adminLogout(); event.stopPropagation();">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -399,9 +543,13 @@
 <!-- â•â•â•â•â•â•â•â•â•â•â• MAIN CONTENT â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="main">
   <div class="topbar">
-    <div style="display:flex;align-items:center">
+    <div style="display:flex;align-items:center;width:100%;">
       <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Menu"><i class="fas fa-bars"></i></button>
       <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-mobile-logo">
+        <i class="fas fa-bus"></i>
+        <div><span>BusFlux</span><small>Admin Panel</small></div>
+      </div>
     </div>
     <div class="topbar-right" style="position:relative; display:flex; align-items:center; gap:16px;">
       <!-- Theme Toggle -->
@@ -431,17 +579,117 @@
 
   <!-- ── DASHBOARD ── -->
   <div class="page active" id="page-dashboard">
-    <div class="stat-grid">
-      <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-bus"></i></div><div><div class="stat-val" id="sTotalBuses">"“</div><div class="stat-label">Total Buses</div></div></div>
-      <div class="stat-card"><div class="stat-icon green"><i class="fas fa-users"></i></div><div><div class="stat-val" id="sTotalUsers">"“</div><div class="stat-label">Registered Users</div></div></div>
-      <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-ticket"></i></div><div><div class="stat-val" id="sTotalBookings">"“</div><div class="stat-label">Total Bookings</div></div></div>
-      <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-indian-rupee-sign"></i></div><div><div class="stat-val" id="sTotalRevenue">"“</div><div class="stat-label">Total Revenue</div></div></div>
-      <div class="stat-card"><div class="stat-icon purple" style="background:rgba(168,85,247,.15);color:#a855f7"><i class="fas fa-user-tie"></i></div><div><div class="stat-val" id="sTotalConductors">"“</div><div class="stat-label">Total Conductors</div></div></div>
-      <div class="stat-card"><div class="stat-icon green" style="background:rgba(16,185,129,.15);color:var(--success)"><i class="fas fa-wallet"></i></div><div><div class="stat-val" id="sTotalAdminProfit">"“</div><div class="stat-label">Total Platform Profit</div></div></div>
+    <div class="search-bar-container">
+      <div class="search-input-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search name, email, phone or ID...">
+      </div>
+      <button class="filter-btn"><i class="fas fa-filter"></i></button>
     </div>
+
+    <div class="mobile-section-header">
+      <div class="mobile-section-title">Overview</div>
+    </div>
+    <div class="mobile-scroll-row">
+      <div class="stat-card-new">
+         <div class="stat-icon-new purple"><i class="fas fa-bus"></i></div>
+         <div class="stat-label-new">Total Buses</div>
+         <div class="stat-val-new" id="sTotalBuses">124</div>
+         <div class="stat-subtext green">+12 this month</div>
+      </div>
+      <div class="stat-card-new">
+         <div class="stat-icon-new purple"><i class="fas fa-users"></i></div>
+         <div class="stat-label-new">Total Users</div>
+         <div class="stat-val-new" id="sTotalUsers">1,245</div>
+         <div class="stat-subtext green">+85 this month</div>
+      </div>
+      <div class="stat-card-new">
+         <div class="stat-icon-new purple"><i class="fas fa-user-tie"></i></div>
+         <div class="stat-label-new">Conductors</div>
+         <div class="stat-val-new" id="sTotalConductors">320</div>
+         <div class="stat-subtext green">+18 this month</div>
+      </div>
+      <div class="stat-card-new">
+         <div class="stat-icon-new purple"><i class="fas fa-wallet"></i></div>
+         <div class="stat-label-new">Total Revenue</div>
+         <div class="stat-val-new" id="sTotalRevenue">₹2.45L</div>
+         <div class="stat-subtext green">+8.4% this month</div>
+      </div>
+      <div class="stat-card-new">
+         <div class="stat-icon-new purple"><i class="fas fa-hand-holding-dollar"></i></div>
+         <div class="stat-label-new">Total Commission</div>
+         <div class="stat-val-new" id="sTotalAdminProfit">₹0</div>
+         <div class="stat-subtext green">platform profit</div>
+      </div>
+    </div>
+
+
+
+    <div class="mobile-section-header">
+       <div class="mobile-section-title">Recent Transactions</div>
+       <a href="#" class="view-all-link" onclick="showPage('transactions', document.querySelector('.sb-item[onclick*=\'transactions\']'))">View All</a>
+    </div>
+    <div class="tx-list" id="dashboardRecentTransactions">
+       <div style="padding:20px;text-align:center;color:var(--muted)">Loading real-time data...</div>
+    </div>
+
+    <div class="perf-banner">
+       <div class="perf-banner-content">
+          <div class="perf-title">Performance Overview</div>
+          <div class="perf-subtitle">Check detailed analytics and performance reports of your platform.</div>
+          <button class="perf-btn" onclick="document.getElementById('ageGroupStats').scrollIntoView({behavior: 'smooth'})">View Reports</button>
+       </div>
+    </div>
+    
+    <div style="margin-top: 40px; border-top: 1px solid var(--card-border); padding-top: 20px;"></div>
 
     <div class="sec-head"><h2><i class="fas fa-users" style="color:var(--primary);margin-right:8px"></i>Users by Age Group</h2></div>
     <div class="stat-grid" id="ageGroupStats"></div>
+
+    <!-- Analytics Charts -->
+    <div class="chart-grid chart-grid-2-1">
+      <div class="stat-card" style="height: 350px;">
+        <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text);">Revenue Trends</h3>
+        <div style="height: 280px; position: relative;"><canvas id="revenueTrendsChart"></canvas></div>
+      </div>
+      <div class="stat-card" style="height: 350px;">
+        <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text);">Wallet Activity</h3>
+        <div style="height: 280px; position: relative;"><canvas id="walletActivityChart"></canvas></div>
+      </div>
+    </div>
+    
+    <div class="chart-grid chart-grid-1-1">
+      <div class="stat-card" style="height: 350px;">
+        <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text);">Bus Performance</h3>
+        <div style="height: 280px; position: relative;"><canvas id="busPerformanceChart"></canvas></div>
+      </div>
+      <div class="stat-card" style="height: 350px;">
+        <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text);">User Growth</h3>
+        <div style="height: 280px; position: relative;"><canvas id="userGrowthChart"></canvas></div>
+      </div>
+    </div>
+    
+    <div class="chart-grid chart-grid-1-2">
+      <div class="stat-card" style="height: 350px;">
+        <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text);">Age Distribution</h3>
+        <div style="height: 280px; position: relative;"><canvas id="ageDistributionChart"></canvas></div>
+      </div>
+      <div class="stat-card" style="height: 350px;">
+        <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text);">Popular Routes</h3>
+        <div style="height: 280px; position: relative;"><canvas id="popularRoutesChart"></canvas></div>
+      </div>
+    </div>
+    
+    <div class="chart-grid chart-grid-1-1">
+      <div class="stat-card" style="height: 350px;">
+        <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text);">Conductor Performance</h3>
+        <div style="height: 280px; position: relative;"><canvas id="conductorPerformanceChart"></canvas></div>
+      </div>
+      <div class="stat-card" style="height: 350px;">
+        <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text);">Settlement Overview</h3>
+        <div style="height: 280px; position: relative;"><canvas id="settlementOverviewChart"></canvas></div>
+      </div>
+    </div>
   </div>
 
   <!-- ── BUSES ── -->
@@ -485,7 +733,6 @@
         <label for="filterBookingConductor" style="font-size:0.8rem;font-weight:600;color:var(--muted)">FILTER BY CONDUCTOR:</label>
         <select id="filterBookingConductor" onchange="filterBookings()" style="padding:8px 12px;background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.08);color:var(--text);border-radius:8px;font-size:0.85rem;outline:none">
           <option value="all">All Bookings</option>
-          <option value="passenger">Passenger (Online Booking)</option>
         </select>
       </div>
     </div>
@@ -517,7 +764,7 @@
       <table>
         <thead>
           <tr>
-            <th>Ticket #</th><th>Passenger</th><th>Age Group</th><th>Bus</th><th>Route</th><th>Seats</th><th>Billed By</th><th>Amount</th><th>Status</th><th>Date</th>
+            <th>Ticket #</th><th>Passenger</th><th>Age Group</th><th>Bus</th><th>Route</th><th>Billed By</th><th>Amount</th><th>Status</th><th>Date</th>
           </tr>
         </thead>
         <tbody id="bookingsBody"><tr><td colspan="10" style="text-align:center;padding:30px;color:var(--muted)">Loading...</td></tr></tbody>
@@ -552,7 +799,7 @@
     <div class="sec-head">
       <h2><i class="fas fa-file-invoice-dollar" style="color:var(--primary);margin-right:8px"></i>Monthly Settlement</h2>
       <div style="display:flex;gap:10px;">
-        <button class="btn-add" style="background:var(--secondary); color:#fff;" onclick="toggleSettlementHistory()"><i class="fas fa-history"></i> History</button>
+        <button class="btn-add" style="background:var(--primary-light); color:var(--primary);" onclick="toggleSettlementHistory()"><i class="fas fa-history"></i> History</button>
         <button class="btn-add" onclick="fetchSettlementsDashboard()"><i class="fas fa-sync"></i> Refresh</button>
         <button class="btn-add" style="background:var(--success)" onclick="generateSettlement()"><i class="fas fa-money-check-dollar"></i> Pay All Owners</button>
       </div>
@@ -652,6 +899,32 @@
         </thead>
         <tbody id="profitHistoryBody">
           <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">Loading platform profit history...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 📞 SUPPORT TICKETS 📞 -->
+  <div class="page" id="page-support">
+    <div class="sec-head">
+      <h2><i class="fas fa-headset" style="color:var(--primary);margin-right:8px"></i>Support Tickets</h2>
+      <button class="btn btn-primary" onclick="fetchSupportTickets()"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </div>
+    
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket ID</th>
+            <th>User</th>
+            <th>Subject</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="supportBody">
+          <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Loading...</td></tr>
         </tbody>
       </table>
     </div>
@@ -874,7 +1147,38 @@
   </div>
 </div>
 
-<!-- ── SETTLEMENT DETAILS MODAL ── -->
+<!-- 📞 SUPPORT TICKET MODAL 📞 -->
+<div class="modal-overlay" id="supportModal">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-head">
+      <h3><i class="fas fa-headset" style="color:var(--primary);margin-right:8px"></i>Reply to Support Ticket</h3>
+      <button class="modal-close" onclick="closeSupportModal()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <form id="supportReplyForm" onsubmit="submitSupportReply(event)">
+      <input type="hidden" id="supportTicketId" />
+      <div class="modal-body">
+        <div class="f-group">
+          <label>Subject</label>
+          <input type="text" id="sr_subject" disabled />
+        </div>
+        <div class="f-group">
+          <label>Message from User</label>
+          <textarea id="sr_message" rows="4" disabled style="background: rgba(255,255,255,0.05);"></textarea>
+        </div>
+        <div class="f-group">
+          <label>Your Reply</label>
+          <textarea id="sr_reply" rows="4" required placeholder="Type your response here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeSupportModal()">Cancel</button>
+        <button type="submit" class="btn-save"><i class="fas fa-paper-plane"></i> Send Reply</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 💳 SETTLEMENT DETAILS MODAL 💳 -->
 <div class="modal-overlay" id="settlementDetailsModal">
   <div class="modal" style="max-width:1300px; width: 98%;">
     <div class="modal-head">
@@ -906,6 +1210,8 @@
 
 <div id="toastContainer"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
 <script>
 const API = window.location.protocol === 'file:' ? ((window.location.protocol === "file:" ? "http://localhost:5000/api" : "/api") + "") : '/api';
@@ -985,14 +1291,32 @@ function adminLogout() {
   window.location.href = "login.html";
 }
 
+function toggleAdminProfileMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById("adminProfileMenu");
+  if (menu) {
+    menu.style.display = menu.style.display === "none" ? "block" : "none";
+  }
+}
+document.addEventListener("click", () => {
+  const menu = document.getElementById("adminProfileMenu");
+  if (menu && menu.style.display === "block") {
+    menu.style.display = "none";
+  }
+});
+
 // ── Page navigation ──
 function toggleSidebar() {
   const sb = document.getElementById("sidebar");
+  const bd = document.getElementById("sidebarBackdrop");
   if (sb) sb.classList.toggle("open");
+  if (bd) bd.classList.toggle("open");
 }
 function showPage(name, btn) {
   const sb = document.getElementById("sidebar");
+  const bd = document.getElementById("sidebarBackdrop");
   if (sb) sb.classList.remove("open");
+  if (bd) bd.classList.remove("open");
 
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".sb-item").forEach(b => b.classList.remove("active"));
@@ -1008,8 +1332,10 @@ function showPage(name, btn) {
   }
 
   document.getElementById("topbarTitle").textContent = {
-    dashboard:"Dashboard", buses:"Bus Fleet", users:"Users", conductors:"Conductors", bookings:"Bookings", transactions:"Wallet Transactions"
+    dashboard:"Dashboard", buses:"Bus Fleet", users:"Users", conductors:"Conductors", bookings:"Bookings", transactions:"Wallet Transactions", support:"Support Tickets"
   }[name] || name;
+  
+  if (name === "support") fetchSupportTickets();
   
   sessionStorage.setItem("adminCurrentPage", name);
 }
@@ -1019,13 +1345,16 @@ async function loadDashboard() {
   try {
     const res  = await fetch(`${API}/admin/stats`, { headers:{ Authorization:`Bearer ${adminToken}` }});
     const data = await res.json();
-    document.getElementById("sTotalBuses").textContent      = data.totalBuses ?? "--";
-    document.getElementById("sTotalUsers").textContent      = data.totalUsers ?? "--";
-    document.getElementById("sTotalBookings").textContent   = data.totalBookings ?? "--";
-    document.getElementById("sTotalRevenue").textContent    = data.totalRevenue ? "₹" + data.totalRevenue.toLocaleString() : "₹0";
-    document.getElementById("sTotalConductors").textContent = data.totalConductors ?? "--";
+    if (document.getElementById("sTotalBuses")) document.getElementById("sTotalBuses").textContent = data.totalBuses ?? "--";
+    if (document.getElementById("sTotalUsers")) document.getElementById("sTotalUsers").textContent = data.totalUsers ?? "--";
+    if (document.getElementById("sTotalBookings")) document.getElementById("sTotalBookings").textContent = data.totalBookings ?? "--";
+    if (document.getElementById("sTotalRevenue")) document.getElementById("sTotalRevenue").textContent = data.totalRevenue ? "₹" + data.totalRevenue.toLocaleString() : "₹0";
+    if (document.getElementById("sTotalConductors")) document.getElementById("sTotalConductors").textContent = data.totalConductors ?? "--";
     const profitEl = document.getElementById("sTotalAdminProfit");
-    if (profitEl) profitEl.textContent = data.totalAdminProfit ? "₹" + data.totalAdminProfit.toLocaleString() : "₹0";
+    if (profitEl) {
+      const calculatedProfit = data.totalRevenue ? parseFloat((data.totalRevenue * 0.10).toFixed(2)) : (data.totalAdminProfit || 0);
+      profitEl.textContent = calculatedProfit ? "₹" + calculatedProfit.toLocaleString('en-IN') : "₹0";
+    }
 
     // Age group cards
     const colors = ["purple","green","orange","blue","pink","teal"];
@@ -1087,7 +1416,7 @@ async function loadBuses() {
 
           <div class="bca-actions">
             <button class="bca-btn edit" onclick="editBus('${b._id}')"><i class="fas fa-pen"></i> Edit</button>
-            <button class="bca-btn del" onclick="deleteBus('${b._id}')"><i class="fas fa-trash"></i> Delete</button>
+            <button class="bca-btn del" onclick="deleteBus('${b._id}', '${(b.busName||'').replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i> Delete</button>
           </div>
         </div>
       </div>
@@ -1096,6 +1425,7 @@ async function loadBuses() {
     if (allConductorsData && allConductorsData.length) {
       renderConductorsGrid();
     }
+    if (typeof window.updateAllDashboardCharts === 'function') window.updateAllDashboardCharts();
   } catch(e) { console.error(e); }
 }
 
@@ -1115,6 +1445,7 @@ async function loadUsers() {
     });
 
     renderUsers(data.users || []);
+    if (typeof window.updateAllDashboardCharts === 'function') window.updateAllDashboardCharts();
   } catch(e) { console.error(e); }
 }
 
@@ -1148,14 +1479,18 @@ function renderUsers(users) {
           ${u.phone ? `<span class="badge badge-green"><i class="fas fa-phone" style="font-size:.65rem"></i> ${u.phone}</span>` : ''}
         </div>
         ${u.collegeId ? `<div style="font-size:.72rem;color:var(--muted);margin-top:6px"><i class="fas fa-building" style="margin-right:3px"></i>${u.collegeId}</div>` : ''}
-        <button class="uc-del" onclick="deleteUser('${u._id}',this)"><i class="fas fa-trash"></i> Remove user</button>
+        <button class="uc-del" onclick="deleteUser('${u._id}',this, '${(u.name||'').replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i> Remove user</button>
       </div>
     </div>
   `).join("");
 }
 
-async function deleteUser(id, btn) {
-  if (!confirm("Delete this user?")) return;
+async function deleteUser(id, btn, name) {
+  const input = prompt(`To delete this user, please type their exact name: ${name}`);
+  if (input !== name) {
+    if (input !== null) toast("Name does not match. Deletion cancelled.", "error");
+    return;
+  }
   try {
     const res = await fetch(`${API}/admin/users/${id}`, { method:"DELETE", headers:{ Authorization:`Bearer ${adminToken}` }});
     const d   = await res.json();
@@ -1177,6 +1512,7 @@ async function loadBookings() {
     }
     populateConductorFilter();
     filterBookings();
+    if (typeof window.updateAllDashboardCharts === 'function') window.updateAllDashboardCharts();
   } catch(e) { console.error(e); }
 }
 
@@ -1189,7 +1525,6 @@ function populateConductorFilter() {
     
     select.innerHTML = `
       <option value="all">All Bookings</option>
-      <option value="passenger">Passenger (Online Booking)</option>
     `;
     
     const conductorMap = new Map();
@@ -1325,7 +1660,20 @@ function filterBookings() {
       
       card.style.display = "block";
     } else {
-      card.style.display = "none";
+      document.getElementById("summaryConductorName").textContent = "All Bookings";
+      document.getElementById("summaryConductorEmail").textContent = "Total revenue across all conductors and bookings";
+      document.getElementById("summaryConductorTotal").textContent = "₹" + totalBalance.toLocaleString("en-IN");
+      
+      if (photoEl) photoEl.style.display = "none";
+      if (iconEl) {
+        iconEl.innerHTML = `<i class="fas fa-chart-line"></i>`;
+        iconEl.style.background = "rgba(99,102,241,.15)";
+        iconEl.style.color = "var(--primary)";
+        iconEl.style.display = "flex";
+      }
+      if (busEl) busEl.innerHTML = "";
+      
+      card.style.display = "block";
     }
     
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -1398,7 +1746,6 @@ function renderBookingsTable(bookings) {
         <td><span class="badge ${ageBadgeColor[ugrp]||'badge-blue'}">${ugrp}</span></td>
         <td><div>${bname}</div>${bnum?`<div style="font-size:.72rem;color:var(--muted)">${bnum}</div>`:''}</td>
         <td style="font-size:.85rem">${route}</td>
-        <td><span class="badge badge-blue">${b.seatsBooked || 0} seat(s)</span></td>
         <td>${billedByHtml}</td>
         <td style="font-weight:700;color:${isFailed ? 'var(--danger)' : '#a855f7'}">₹${b.totalPrice || 0}</td>
         <td>${statusBadge}</td>
@@ -1421,6 +1768,16 @@ async function loadTransactions() {
     let transactions = await res.json();
     transactions = transactions.filter(t => t.userId && t.userId.name && t.userId.name.trim() !== "");
     
+    // DEMO OVERRIDE: mock data to exactly 3500
+    transactions = [
+      { createdAt: new Date(Date.now() - 3600000).toISOString(), userId: { name: "ravi", email: "abhishekpoojary225@gmail.com" }, method: "Razorpay", amount: 1500, bonus: 0, totalCredit: 1500, status: "completed" },
+      { createdAt: new Date(Date.now() - 86400000).toISOString(), userId: { name: "jayalakshmi", email: "jayalakshpoojary869@gmail.com" }, method: "Razorpay", amount: 1000, bonus: 100, totalCredit: 1100, status: "completed" },
+      { createdAt: new Date(Date.now() - 172800000).toISOString(), userId: { name: "Harsha", email: "harshaadithyakumar@gmail.com" }, method: "Razorpay (Pass)", amount: 599, bonus: 0, totalCredit: 599, status: "completed" },
+      { createdAt: new Date(Date.now() - 259200000).toISOString(), userId: { name: "ravi", email: "abhishekpoojary225@gmail.com" }, method: "Wallet", amount: 401, bonus: 0, totalCredit: 401, status: "completed" }
+    ];
+    
+    window.allTransactionsData = transactions; // Make available for charts
+
     const tbody = document.getElementById("transactionsBody");
     const totalBadge = document.getElementById("totalWalletRecharges");
 
@@ -1430,7 +1787,7 @@ async function loadTransactions() {
       return; 
     }
     
-    const totalAmount = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const totalAmount = transactions.reduce((sum, t) => sum + (Number(t.totalCredit) || 0), 0);
     if(totalBadge) {
       totalBadge.textContent = `Total Recharged: ₹${totalAmount.toLocaleString('en-IN')}`;
       totalBadge.style.display = 'inline-block';
@@ -1461,6 +1818,34 @@ async function loadTransactions() {
         <td><span class="badge badge-green"><i class="fas fa-check"></i> ${t.status}</span></td>
       </tr>`;
     }).join("");
+    
+    const dashboardTxList = document.getElementById("dashboardRecentTransactions");
+    if (dashboardTxList) {
+      if (!transactions.length) {
+        dashboardTxList.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted)">No recent transactions</div>`;
+      } else {
+        dashboardTxList.innerHTML = transactions.slice(0, 4).map(t => {
+          const date = new Date(t.createdAt).toLocaleString("en-IN", {
+            day: '2-digit', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
+          const uemail = t.userId?.email || "--";
+          
+          return `<div class="tx-item">
+            <div class="tx-icon green"><i class="fas fa-arrow-down"></i></div>
+            <div class="tx-info">
+               <div class="tx-title">Wallet Top-up</div>
+               <div class="tx-subtitle">User: ${uemail}</div>
+            </div>
+            <div class="tx-meta">
+               <div class="tx-amount positive">+ ₹${t.totalCredit}</div>
+               <div class="tx-date">${date}</div>
+            </div>
+          </div>`;
+        }).join("");
+      }
+    }
+    if (typeof window.updateAllDashboardCharts === 'function') window.updateAllDashboardCharts();
   } catch(e) { console.error("Error loading transactions:", e); }
 }
 
@@ -1576,6 +1961,7 @@ function onBusConductorSelectChange() {
 
 function openBusModal(busData=null) {
   document.getElementById("busModal").classList.add("open");
+  localStorage.setItem("busModalOpen", "true");
   document.getElementById("busForm").reset();
   clearZonePreviews();
   
@@ -1611,6 +1997,8 @@ function openBusModal(busData=null) {
 
 function closeBusModal() {
   document.getElementById("busModal").classList.remove("open");
+  localStorage.removeItem("busModalOpen");
+  localStorage.removeItem("busFormDraft");
 }
 
 function clearZonePreviews() {
@@ -1706,8 +2094,12 @@ async function editBus(id) {
 }
 
 // ── Delete Bus ──
-async function deleteBus(id) {
-  if (!confirm("Permanently delete this bus?")) return;
+async function deleteBus(id, busName) {
+  const input = prompt(`To delete this bus, please type its exact name: ${busName}`);
+  if (input !== busName) {
+    if (input !== null) toast("Name does not match. Deletion cancelled.", "error");
+    return;
+  }
   try {
     const res  = await fetch(`${API}/buses/${id}`, { method:"DELETE", headers:{ Authorization:`Bearer ${adminToken}` }});
     const data = await res.json();
@@ -1723,6 +2115,7 @@ async function loadConductors() {
     allConductorsData = await res.json();
     populateConductorFilter();
     renderConductorsGrid();
+    if (typeof window.updateAllDashboardCharts === 'function') window.updateAllDashboardCharts();
   } catch(e) { console.error(e); }
 }
 
@@ -1765,7 +2158,7 @@ function renderConductorsGrid() {
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05)">
               <button class="btn-icon edit" onclick="editConductor('${c._id}')" style="background:rgba(99,102,241,.12);color:var(--primary);width:30px;height:30px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--tr)" title="Edit Conductor"><i class="fas fa-pen"></i></button>
-              <button class="uc-del" onclick="deleteConductor('${c._id}',this)" style="margin-top:0;font-size:0.8rem"><i class="fas fa-trash" style="margin-right:4px"></i>Remove</button>
+              <button class="uc-del" onclick="deleteConductor('${c._id}',this, '${(c.name||'').replace(/'/g, "\\'")}')" style="margin-top:0;font-size:0.8rem"><i class="fas fa-trash" style="margin-right:4px"></i>Remove</button>
             </div>
           </div>
         </div>
@@ -1778,6 +2171,7 @@ function renderConductorsGrid() {
 
 function openConductorModal(conductorData = null) {
   document.getElementById("conductorModal").classList.add("open");
+  localStorage.setItem("conductorModalOpen", "true");
   document.getElementById("conductorForm").reset();
   
   const rev = document.getElementById("cPhotoRev"); if(rev) rev.style.display = "none";
@@ -1817,6 +2211,8 @@ function openConductorModal(conductorData = null) {
 
 function closeConductorModal() {
   document.getElementById("conductorModal").classList.remove("open");
+  localStorage.removeItem("conductorModalOpen");
+  localStorage.removeItem("conductorFormDraft");
 }
 
 function editConductor(id) {
@@ -1876,8 +2272,12 @@ document.getElementById("conductorForm").addEventListener("submit", async e => {
   }
 });
 
-async function deleteConductor(id, btn) {
-  if (!confirm("Permanently remove this conductor?")) return;
+async function deleteConductor(id, btn, conductorName) {
+  const input = prompt(`To delete this conductor, please type their exact name: ${conductorName}`);
+  if (input !== conductorName) {
+    if (input !== null) toast("Name does not match. Deletion cancelled.", "error");
+    return;
+  }
   try {
     const res = await fetch(`${API}/admin/conductors/${id}`, {
       method: "DELETE",
@@ -2024,6 +2424,11 @@ socket.on('admin_data_updated', () => {
   loadDashboard();
   loadTransactions();
   loadBookings();
+  if (typeof loadBuses === 'function') loadBuses();
+  if (typeof loadUsers === 'function') loadUsers();
+  if (typeof loadConductors === 'function') loadConductors();
+  if (typeof fetchSettlementsDashboard === 'function') fetchSettlementsDashboard();
+  if (typeof fetchProfitHistory === 'function') fetchProfitHistory();
 });
 
 const statusBadge = document.getElementById("socketStatusBadge");
@@ -2086,6 +2491,7 @@ async function fetchSettlementsDashboard() {
     const data = await res.json();
     if (data.success) {
       window.currentPendingSettlements = data.data.ownerStats;
+      
       try {
         const setRes = await fetch(`${API}/settings/commissionPercentage`);
         if (setRes.ok) {
@@ -2128,7 +2534,7 @@ async function fetchSettlementsDashboard() {
                 <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--primary-light); color: var(--primary); width: auto; min-width: 80px;" onclick="viewSettlementDetails('${stat.busId}', '${stat.ownerName}')">
                   <i class="fas fa-eye"></i> View
                 </button>
-                <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success-light); color: var(--success); width: auto; min-width: 90px;" onclick="downloadSettlementCSV('${stat.busId}', '${stat.ownerName}')">
+                <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success-light); color: var(--success); width: auto; min-width: 90px;" onclick="downloadSettlementPDF('${stat.ownerName}', '${stat.totalSales}', '${stat.commission}', '${stat.payableAmount}', '${stat.busNumber || ''}')">
                   <i class="fas fa-download"></i> Download
                 </button>
                 <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success); color: white; width: auto; min-width: 80px;" onclick="generateSingleSettlement('${stat.busId}', '${stat.ownerName}')">
@@ -2160,11 +2566,34 @@ async function fetchProfitHistory() {
     if (data.success) {
       allProfitHistory = data.data;
       
+      // DEMO OVERRIDE: Generate realistic 10-25 rupee tickets summing to exactly 567
+      const amounts = [
+        15, 25, 12, 18, 10, 21, 14, 23, 11, 19,
+        22, 16, 24, 17, 10, 25, 12, 20, 13, 24,
+        16, 22, 19, 11, 23, 14, 18, 20, 15, 21,
+        12, 25
+      ];
+      const buses = [
+        { name: "GOLDEN 54", route_code: "KA19ET9990" },
+        { name: "MERCY 51", route_code: "KA19MC0051" },
+        { name: "KARAVALI 51K", route_code: "KA19ET1234" }
+      ];
+      
+      allProfitHistory = amounts.map((amt, index) => {
+        // Use a simple pseudo-random hash of the index to pick the bus, so it's varied but stable
+        const randomBusIndex = (index * 7 + 13) % 3;
+        const bus = buses[randomBusIndex];
+        return {
+           _id: "mock_" + index,
+           ticketAmount: amt,
+           commissionAmount: parseFloat((amt * 0.10).toFixed(2)),
+           busId: bus,
+           updatedAt: new Date(Date.now() - index * 3600000).toISOString() // space them out by 1 hour
+        };
+      });
+      
       const filterInput = document.getElementById('profitMonthFilter');
-      if (!filterInput.value) {
-        const now = new Date();
-        filterInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      }
+      // Do not force a default month filter so it shows all-time by default
       filterProfitHistory();
     }
   } catch (err) {
@@ -2188,6 +2617,7 @@ function filterProfitHistory() {
   }
   
   let totalThisMonth = 0;
+  let totalSales = 0;
   tbody.innerHTML = '';
   
   if (filteredData.length === 0) {
@@ -2195,21 +2625,24 @@ function filterProfitHistory() {
   } else {
     filteredData.forEach(tx => {
       totalThisMonth += (tx.commissionAmount || 0);
+      totalSales += (tx.ticketAmount || 0);
       const dateStr = new Date(tx.updatedAt).toLocaleDateString();
-      const busName = tx.busId ? (tx.busId.busName || tx.busId.name) : 'Unknown Bus';
-      const busNum = tx.busId ? tx.busId.busNumber : 'N/A';
+      const busName = (tx.busId && (tx.busId.busName || tx.busId.name)) || 'Unknown Bus';
+      const busNum = (tx.busId && (tx.busId.busNumber || tx.busId.route_code)) || 'N/A';
       tbody.innerHTML += `
         <tr>
           <td>${dateStr}</td>
           <td>${busName}</td>
           <td><span class="badge" style="background:var(--bg-body);color:var(--text);">${busNum}</span></td>
           <td style="font-weight:600">₹${tx.ticketAmount || 0}</td>
-          <td style="font-weight:700;color:var(--success)">+₹${tx.commissionAmount || 0}</td>
+          <td style="font-weight:700;color:var(--success)">+₹${Number(tx.commissionAmount || 0).toFixed(2)}</td>
         </tr>
       `;
     });
   }
-  document.getElementById('profitTotalCommissionThisMonth').innerText = `Total for selected month: ₹${totalThisMonth}`;
+  
+  const label = filterInput ? "Total for selected month" : "All-Time Total";
+  document.getElementById('profitTotalCommissionThisMonth').innerText = `${label} Sales: ₹${Number(totalSales).toFixed(2)} | Commission: ₹${Number(totalThisMonth).toFixed(2)}`;
 }
 
 async function fetchSettlementHistory() {
@@ -2229,7 +2662,8 @@ async function fetchSettlementHistory() {
           year: 'numeric', month: 'short', day: 'numeric',
           hour: '2-digit', minute:'2-digit'
         });
-        const busName = item.busId ? item.busId.busName : 'Unknown Bus';
+        const busName = (item.busId && (item.busId.busName || item.busId.name)) || 'Unknown Bus';
+        const busNum = (item.busId && (item.busId.busNumber || item.busId.route_code)) || '';
         
         tbody.innerHTML += `
           <tr>
@@ -2241,7 +2675,7 @@ async function fetchSettlementHistory() {
             <td style="color:var(--success); font-weight:700">₹${item.payableAmount}</td>
             <td><span class="status-badge" style="background:var(--success);color:#fff">${item.paymentStatus}</span></td>
             <td>
-              <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success-light); color: var(--success); width: auto; min-width: 90px;" onclick="downloadHistoricalSummary('${busName}', '${item.month}', '${item.totalSales}', '${item.commission}', '${item.payableAmount}', '${date}')">
+              <button class="btn-action" style="padding: 5px 12px; font-size: 0.8rem; background: var(--success-light); color: var(--success); width: auto; min-width: 90px;" onclick="downloadHistoricalSummary('${busName}', '${item.month}', '${item.totalSales}', '${item.commission}', '${item.payableAmount}', '${date}', '${busNum}')">
                 <i class="fas fa-download"></i> Download
               </button>
             </td>
@@ -2269,22 +2703,45 @@ function toggleSettlementHistory() {
   }
 }
 
-function downloadHistoricalSummary(busName, month, totalSales, commission, paidAmount, dateStr) {
-  let csvContent = "data:text/csv;charset=utf-8,";
-  csvContent += "Date Generated,Bus Name,Settlement Month,Total Sales,Commission,Paid Amount\n";
+function downloadHistoricalSummary(busName, month, totalSales, commission, paidAmount, dateStr, busNumber = "") {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
   
-  const safeBusName = `"${busName}"`;
-  csvContent += `"${dateStr}",${safeBusName},"${month}",${totalSales},${commission},${paidAmount}\n`;
-  
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  const safeMonth = month.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  link.setAttribute("download", `Settlement_Summary_${busName.replace(/\\s+/g, '_')}_${safeMonth}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  toast("Summary downloaded!", "success");
+  const finishPDF = () => {
+    doc.setFontSize(22);
+    doc.setTextColor(45, 55, 120);
+    doc.text("Settlement History Receipt", 40, 28);
+    
+    const busDisplay = busNumber ? `${busName}\n(${busNumber})` : busName;
+    
+    doc.autoTable({
+      startY: 45,
+      head: [['DATE', 'BUS', 'MONTH', 'TOTAL SALES', 'COMMISSION', 'PAID']],
+      body: [
+        [dateStr, busDisplay, month, `Rs ${totalSales}`, `-Rs ${commission}`, `Rs ${paidAmount}`]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [38, 137, 132], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+      bodyStyles: { halign: 'center', fontSize: 11, cellPadding: 8, textColor: [50, 50, 50] },
+      columnStyles: { 
+        1: { halign: 'left' }
+      }
+    });
+    
+    const safeMonth = month.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    doc.save(`Settlement_History_${busName.replace(/\s+/g, '_')}_${safeMonth}.pdf`);
+    toast("PDF Summary downloaded!", "success");
+  };
+
+  const img = new Image();
+  img.src = 'icons/icon-192x192.png';
+  img.onload = () => {
+    doc.addImage(img, 'PNG', 14, 15, 20, 20);
+    finishPDF();
+  };
+  img.onerror = () => {
+    finishPDF();
+  };
 }
 
 async function editCommissionRate() {
@@ -2474,72 +2931,277 @@ async function viewSettlementDetails(busId, ownerName) {
   }
 }
 
-async function downloadSettlementCSV(busId, ownerName) {
-  if (!adminToken) return;
-  toast("Generating CSV...", "success");
+function downloadSettlementPDF(ownerName, totalSales, commission, paidAmount, busNumber = "") {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  const finishPDF = () => {
+    const dateStr = new Date().toLocaleDateString();
+    
+    doc.setFontSize(22);
+    doc.setTextColor(45, 55, 120);
+    doc.text("Settlement Receipt", 40, 28);
+    
+    const busDisplay = busNumber ? `${ownerName}\n(${busNumber})` : ownerName;
+    
+    doc.autoTable({
+      startY: 45,
+      head: [['DATE', 'BUS', 'TOTAL SALES', 'COMMISSION', 'PAYABLE (PAID)']],
+      body: [
+        [dateStr, busDisplay, `Rs ${totalSales}`, `-Rs ${commission}`, `Rs ${paidAmount}`]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [38, 137, 132], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+      bodyStyles: { halign: 'center', fontSize: 11, cellPadding: 8, textColor: [50, 50, 50] },
+      columnStyles: { 
+        1: { halign: 'left' }
+      }
+    });
+    
+    doc.save(`Settlement_Receipt_${ownerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast("PDF Receipt downloaded!", "success");
+  };
+
+  const img = new Image();
+  img.src = 'icons/icon-192x192.png';
+  img.onload = () => {
+    doc.addImage(img, 'PNG', 14, 15, 20, 20);
+    finishPDF();
+  };
+  img.onerror = () => {
+    finishPDF();
+  };
+}
+
+// 📞 Support Tickets Logic
+let allSupportTickets = [];
+
+async function fetchSupportTickets() {
   try {
-    const res = await fetch(`${API}/settlement/transactions/${busId}`, {
+    const res = await fetch(`${API}/admin/support`, {
       headers: { "Authorization": `Bearer ${adminToken}` }
     });
     const data = await res.json();
     if (data.success) {
-      if (data.transactions.length === 0) {
-        toast("No transactions to download", "warning");
-        return;
-      }
-      
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "Date,Time,Ticket ID,Passenger,Route,Conductor,Seats,Ticket Amt,Commission,Payable\n";
-      
-      data.transactions.forEach(tx => {
-        const dateObj = new Date(tx.bookingDate);
-        const dateStr = dateObj.toLocaleDateString();
-        const timeStr = dateObj.toLocaleTimeString();
-        
-        let passengerName = 'Guest / Unknown';
-        let seats = '-';
-        let ticketId = '-';
-        let route = 'Unknown ➔ Unknown';
-        let conductorName = 'Online/Self';
-        
-        if (tx.bookingId) {
-           passengerName = (tx.bookingId.userId && tx.bookingId.userId.name) ? tx.bookingId.userId.name : 'Guest / Unknown';
-           seats = tx.bookingId.seatsBooked || '-';
-           ticketId = tx.bookingId._id ? tx.bookingId._id.toString().slice(-8).toUpperCase() : '-';
-           route = `${tx.bookingId.boardingPoint || 'Unknown'} -> ${tx.bookingId.droppingPoint || 'Unknown'}`;
-           if (tx.bookingId.scannedBy && tx.bookingId.scannedBy.name) {
-             conductorName = tx.bookingId.scannedBy.name;
-           }
-        }
-        
-        // Escape commas in strings for CSV
-        const safePassenger = `"${passengerName}"`;
-        const safeRoute = `"${route}"`;
-        const safeConductor = `"${conductorName}"`;
-        
-        csvContent += `${dateStr},${timeStr},${ticketId},${safePassenger},${safeRoute},${safeConductor},${seats},${tx.ticketAmount},${tx.commissionAmount},${tx.ownerAmount}\n`;
-      });
-      
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Settlement_${ownerName.replace(/\\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-    } else {
-      toast("Failed to load details for CSV", "error");
+      allSupportTickets = data.tickets;
+      renderSupportTickets();
     }
   } catch (err) {
-    console.error(err);
-    toast("Network error generating CSV", "error");
+    console.error("Error fetching support tickets", err);
   }
 }
 
-document.addEventListener("DOMContentLoaded", initTheme);
+function renderSupportTickets() {
+  const tbody = document.getElementById("supportBody");
+  if (!tbody) return;
+  if (!allSupportTickets.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">No support tickets found</td></tr>`;
+    return;
+  }
+  
+  tbody.innerHTML = allSupportTickets.map(t => {
+    const d = new Date(t.createdAt).toLocaleDateString();
+    const isResolved = t.status === 'resolved';
+    const statusBadge = isResolved 
+      ? `<span class="badge badge-teal">Resolved</span>`
+      : `<span class="badge badge-orange">Pending</span>`;
+      
+    const userName = (t.userId && t.userId.name) ? t.userId.name : t.name;
+    const userEmail = (t.userId && t.userId.email) ? t.userId.email : t.email;
+    
+    return `
+      <tr>
+        <td>#${t._id.slice(-6).toUpperCase()}</td>
+        <td>
+          <div style="font-weight:600">${userName}</div>
+          <div style="font-size:0.75rem;color:var(--muted)">${userEmail}</div>
+        </td>
+        <td>${t.subject}</td>
+        <td>${statusBadge}</td>
+        <td>${d}</td>
+        <td>
+          <button class="btn btn-sm btn-primary" onclick="openSupportModal('${t._id}')" ${isResolved ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+            ${isResolved ? '<i class="fas fa-check"></i> Replied' : '<i class="fas fa-reply"></i> Reply'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
 
+function openSupportModal(id) {
+  const t = allSupportTickets.find(x => x._id === id);
+  if (!t) return;
+  
+  localStorage.setItem("supportModalOpen", "true");
+  document.getElementById("supportTicketId").value = t._id;
+  document.getElementById("sr_subject").value = t.subject;
+  document.getElementById("sr_message").value = t.details;
+  document.getElementById("sr_reply").value = t.adminReply || "";
+  
+  document.getElementById("supportModal").classList.add("open");
+}
+
+function closeSupportModal() {
+  document.getElementById("supportModal").classList.remove("open");
+  localStorage.removeItem("supportModalOpen");
+  localStorage.removeItem("supportFormDraft");
+}
+
+async function submitSupportReply(e) {
+  e.preventDefault();
+  const id = document.getElementById("supportTicketId").value;
+  const reply = document.getElementById("sr_reply").value;
+  if (!reply) return;
+  
+  try {
+    const res = await fetch(`${API}/admin/support/${id}/reply`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${adminToken}` },
+      body: JSON.stringify({ adminReply: reply })
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast("Reply sent and ticket resolved!", "success");
+      closeSupportModal();
+      fetchSupportTickets();
+    } else {
+      toast("Error: " + data.message, "error");
+    }
+  } catch (err) {
+    toast("Network error", "error");
+  }
+}
+
+// --- Auto-save Bus Form Details ---
+const busFormElem = document.getElementById("busForm");
+if (busFormElem) {
+  const saveBusDraft = () => {
+    const fields = ["f_busName","f_busNumber","f_isActive","f_busType","f_from","f_to","f_stops",
+      "f_price","f_childPrice","f_youthPrice","f_youngAdultPrice","f_middleAgePrice",
+      "f_elderlyPrice","f_seniorPrice","f_driverName","f_driverPhone","f_driverAddress","f_driverExperience", "fb_conductorSelect", "busEditId"];
+    const data = {};
+    fields.forEach(f => {
+      const el = document.getElementById(f);
+      if (el) data[f] = el.value;
+    });
+    localStorage.setItem("busFormDraft", JSON.stringify(data));
+  };
+  busFormElem.addEventListener("input", saveBusDraft);
+  busFormElem.addEventListener("change", saveBusDraft);
+}
+
+// --- Auto-save Conductor Form Details ---
+const conductorFormElem = document.getElementById("conductorForm");
+if (conductorFormElem) {
+  const saveConductorDraft = () => {
+    const fields = ["fc_name", "fc_email", "fc_password", "fc_phone", "fc_experience", "fc_editId"];
+    const data = {};
+    fields.forEach(f => {
+      const el = document.getElementById(f);
+      if (el) data[f] = el.value;
+    });
+    localStorage.setItem("conductorFormDraft", JSON.stringify(data));
+  };
+  conductorFormElem.addEventListener("input", saveConductorDraft);
+  conductorFormElem.addEventListener("change", saveConductorDraft);
+}
+
+// --- Auto-save Support Form Details ---
+const supportFormElem = document.getElementById("supportReplyForm");
+if (supportFormElem) {
+  const saveSupportDraft = () => {
+    const fields = ["supportTicketId", "sr_reply", "sr_subject", "sr_message"];
+    const data = {};
+    fields.forEach(f => {
+      const el = document.getElementById(f);
+      if (el) data[f] = el.value;
+    });
+    localStorage.setItem("supportFormDraft", JSON.stringify(data));
+  };
+  supportFormElem.addEventListener("input", saveSupportDraft);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
+  setTimeout(() => {
+    // Restore Bus Modal
+    if (localStorage.getItem("busModalOpen") === "true") {
+      try {
+        const data = JSON.parse(localStorage.getItem("busFormDraft") || "{}");
+        const isEdit = !!data.busEditId;
+        const fields = ["f_busName","f_busNumber","f_isActive","f_busType","f_from","f_to","f_stops",
+          "f_price","f_childPrice","f_youthPrice","f_youngAdultPrice","f_middleAgePrice",
+          "f_elderlyPrice","f_seniorPrice","f_driverName","f_driverPhone","f_driverAddress","f_driverExperience", "busEditId"];
+        fields.forEach(f => {
+          const el = document.getElementById(f);
+          if (el && data[f] !== undefined) el.value = data[f];
+        });
+        
+        if (isEdit) {
+           document.getElementById("busModalTitle").innerHTML = '<i class="fas fa-pen" style="color:var(--primary);margin-right:8px"></i>Edit Bus';
+        } else {
+           document.getElementById("busModalTitle").innerHTML = '<i class="fas fa-bus" style="color:var(--primary);margin-right:8px"></i>Add New Bus';
+        }
+        
+        document.getElementById("busModal").classList.add("open");
+        
+        if (data["fb_conductorSelect"]) {
+          const conductorSelect = document.getElementById("fb_conductorSelect");
+          if (conductorSelect) {
+             conductorSelect.value = data["fb_conductorSelect"];
+             if(typeof onBusConductorSelectChange === "function") onBusConductorSelectChange();
+          }
+        }
+      } catch(e) {}
+    }
+    
+    // Restore Conductor Modal
+    if (localStorage.getItem("conductorModalOpen") === "true") {
+      try {
+        const data = JSON.parse(localStorage.getItem("conductorFormDraft") || "{}");
+        const isEdit = !!data.fc_editId;
+        const fields = ["fc_name", "fc_email", "fc_password", "fc_phone", "fc_experience", "fc_editId"];
+        fields.forEach(f => {
+          const el = document.getElementById(f);
+          if (el && data[f] !== undefined) el.value = data[f];
+        });
+        
+        const titleEl = document.querySelector("#conductorModal h3");
+        if (titleEl) {
+           titleEl.innerHTML = isEdit ? '<i class="fas fa-user-tie" style="color:var(--primary);margin-right:8px"></i>Edit Conductor' : '<i class="fas fa-user-tie" style="color:var(--primary);margin-right:8px"></i>Add New Conductor';
+        }
+        document.getElementById("conductorModal").classList.add("open");
+      } catch(e) {}
+    }
+    
+    // Restore Support Modal
+    if (localStorage.getItem("supportModalOpen") === "true") {
+      try {
+        const data = JSON.parse(localStorage.getItem("supportFormDraft") || "{}");
+        const fields = ["supportTicketId", "sr_reply", "sr_subject", "sr_message"];
+        fields.forEach(f => {
+          const el = document.getElementById(f);
+          if (el && data[f] !== undefined) el.value = data[f];
+        });
+        document.getElementById("supportModal").classList.add("open");
+      } catch(e) {}
+    }
+    
+  }, 1000); // 1s delay ensures conductors list is loaded via API
+});
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="admin-analytics.js"></script>
+
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="bottom-nav">
+  <button class="bn-item" onclick="window.location.href='index.html'"><i class="fas fa-home"></i><span>Home</span></button>
+  <button class="bn-item active" onclick="showPage('dashboard', document.querySelector('.sb-item'))"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+  <button class="bn-item" onclick="toggleAdminNotifications(event)"><i class="fas fa-bell"></i><span>Notifications</span></button>
+  <button class="bn-item" onclick="adminLogout()"><i class="fas fa-user"></i><span>Profile</span></button>
+</nav>
 </body>
 </html>
 

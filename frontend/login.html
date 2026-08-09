@@ -744,7 +744,7 @@
       overlay.classList.add('visible');
 
       try {
-        const res = await fetch(((window.location.protocol === "file:" ? "http://localhost:5000/api" : "/api") + "/auth/login"), {
+        const res = await fetch("http://localhost:5000/api/auth/login", {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -773,23 +773,25 @@
     });
 
     // ── Phone Login Form ──
-    document.getElementById('phoneLoginForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const phone = document.getElementById('loginPhone').value.trim();
-      const password = document.getElementById('loginPhonePassword').value;
-
-      if (!phone || phone.length < 10) { showToast('Please enter a valid 10-digit phone number.', 'error'); return; }
-      if (!password) { showToast('Please enter your password.', 'error'); return; }
-
-      const overlay = document.getElementById('loginLoaderOverlay');
-      overlay.classList.add('visible');
-
-      try {
-        const res = await fetch(((window.location.protocol === "file:" ? "http://localhost:5000/api" : "/api") + "/auth/login"), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: '+91' + phone, password })
-        });
+    const phoneForm = document.getElementById('phoneLoginForm');
+    if (phoneForm) {
+      phoneForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const phone = document.getElementById('loginPhone').value.trim();
+        const password = document.getElementById('loginPhonePassword').value;
+  
+        if (!phone || phone.length < 10) { showToast('Please enter a valid 10-digit phone number.', 'error'); return; }
+        if (!password) { showToast('Please enter your password.', 'error'); return; }
+  
+        const overlay = document.getElementById('loginLoaderOverlay');
+        overlay.classList.add('visible');
+  
+        try {
+          const res = await fetch("http://localhost:5000/api/auth/login", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: '+91' + phone, password })
+          });
         const data = await res.json();
         overlay.classList.remove('visible');
 
@@ -810,7 +812,8 @@
         overlay.classList.remove('visible');
         showToast('Connection error. Please try again.', 'error');
       }
-    });
+      });
+    }
 
     // ── Clear existing session when visiting login page ──
     (function() {

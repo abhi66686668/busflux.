@@ -12,42 +12,43 @@
   <!-- Chart.js & QR Scanner -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <style>
-    /* ── CORE TAILADMIN STYLING ── */
+    /* ── MATERIAL DESIGN 3 PREMIUM THEME ── */
     :root {
-      --bg-body: #f1f5f9;
+      --bg-body: #f4f3ff;
       --bg-card: #ffffff;
-      --bg-sidebar: #1c2434;
-      --border-color: #e2e8f0;
-      
-      --text-main: #1c2434;
-      --text-muted: #64748b;
-      --text-sidebar: #dee4ee;
-      
-      --primary: #3c50e0;
-      --primary-light: rgba(60, 80, 224, 0.1);
+      --bg-sidebar: #1a1033;
+      --border-color: #e5e7ff;
+      --text-main: #1a1033;
+      --text-muted: #6b7280;
+      --text-sidebar: #d4d0f0;
+      --primary: #6C4CF1;
+      --primary2: #8A6CFF;
+      --primary-light: rgba(108,76,241,0.1);
+      --primary-grad: linear-gradient(135deg,#6C4CF1,#8A6CFF);
       --success: #10b981;
-      --success-light: rgba(16, 185, 129, 0.1);
+      --success-light: rgba(16,185,129,0.1);
       --danger: #f43f5e;
-      --danger-light: rgba(244, 63, 94, 0.1);
+      --danger-light: rgba(244,63,94,0.1);
       --warning: #f59e0b;
-      
-      --sidebar-width: 280px;
-      --header-height: 80px;
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      --radius: 10px;
-      --shadow: 0px 8px 24px rgba(149, 157, 165, 0.15);
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --shadow: 0 4px 24px rgba(108,76,241,0.08);
+      --shadow-md: 0 8px 32px rgba(108,76,241,0.14);
     }
-
-    /* Dark Mode overrides */
     body.dark-mode {
-      --bg-body: #0b0f19;
-      --bg-card: #151f32;
-      --border-color: #24304f;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --shadow: 0px 8px 24px rgba(0, 0, 0, 0.4);
+      --bg-body: #0d0920;
+      --bg-card: #160d2e;
+      --border-color: #2a1f4a;
+      --text-main: #f1eeff;
+      --text-muted: #9d94c4;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -408,64 +409,6 @@
       .user-profile-menu .info { display: none !important; }
       .user-profile-menu { padding-left: 10px; }
       .header-right { gap: 14px; }
-      
-      /* Bottom Navigation for Mobile */
-      .sidebar-toggle { display: none !important; }
-      aside {
-        transform: none !important;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        top: auto;
-        width: 100%;
-        height: 65px;
-        min-height: 65px;
-        flex-direction: row;
-        z-index: 1000;
-        border-top: 1px solid var(--border);
-        background: var(--bg-sidebar);
-        padding: 0;
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
-        transition: none;
-      }
-      .sidebar-logo { display: none !important; }
-      .sidebar-menu { 
-        flex-direction: row; 
-        padding: 0 5px; 
-        gap: 5px;
-        width: 100%;
-        justify-content: flex-start;
-        align-items: center;
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-      }
-      .sidebar-menu::-webkit-scrollbar { display: none; } /* Hide scrollbar */
-      .sidebar-menu > div { display: contents; }
-      .menu-group-title { display: none !important; }
-      .menu-links { display: contents; }
-      .menu-links li { display: contents; }
-      .menu-link {
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 8px 10px;
-        gap: 4px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        text-align: center;
-        border-radius: 8px;
-        background: transparent !important;
-        min-width: 75px;
-        margin-bottom: 0;
-      }
-      .menu-link.active {
-        color: var(--primary) !important;
-      }
-      .menu-link i { font-size: 1.3rem; margin: 0; width: auto; color: inherit; }
-      main {
-        margin-bottom: 65px;
-      }
     }
 
     @media (max-width: 640px) {
@@ -498,6 +441,55 @@
       }
     }
 
+    /* ── PREMIUM TRACKING PAGE STYLES ── */
+    .trk-bus-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:var(--shadow-md);border-left:4px solid var(--primary);padding:20px;margin-bottom:16px;animation:fadeUp .4s ease;}
+    .trk-bus-card .bus-title{font-size:1.25rem;font-weight:800;color:var(--primary);letter-spacing:-0.5px;margin-bottom:4px;}
+    .trk-info-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-color);font-size:.88rem;}
+    .trk-info-row:last-child{border-bottom:none;}
+    .trk-info-row i{width:20px;color:var(--primary);font-size:.9rem;}
+    .trk-info-row .lbl{color:var(--text-muted);font-weight:500;min-width:90px;}
+    .trk-info-row .val{font-weight:700;color:var(--text-main);}
+    .trk-select-wrap{position:relative;margin-bottom:16px;}
+    .trk-select-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--primary);}
+    .trk-select{width:100%;height:52px;padding:0 16px 0 40px;border:2px solid var(--border-color);border-radius:var(--radius-sm);font-size:.95rem;font-family:inherit;color:var(--text-main);background:var(--bg-card);outline:none;transition:var(--transition);appearance:none;cursor:pointer;}
+    .trk-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
+    .btn-journey{width:100%;height:56px;border:none;border-radius:16px;background:var(--primary-grad);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 20px rgba(108,76,241,.35);transition:var(--transition);margin-bottom:16px;}
+    .btn-journey:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(108,76,241,.45);}
+    .btn-journey.started{background:linear-gradient(135deg,#10b981,#34d399);box-shadow:0 6px 20px rgba(16,185,129,.35);}
+    .btn-journey.stopping{background:linear-gradient(135deg,#f43f5e,#fb6b88);box-shadow:0 6px 20px rgba(244,63,94,.35);}
+    .status-badge{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:30px;font-weight:700;font-size:.9rem;margin-bottom:16px;width:100%;justify-content:center;}
+    .status-badge.not-started{background:rgba(100,116,139,.1);color:#64748b;}
+    .status-badge.running{background:rgba(16,185,129,.12);color:#10b981;}
+    .status-badge.running .pulse{width:8px;height:8px;border-radius:50%;background:#10b981;animation:statusPulse 1.2s infinite;}
+    .status-badge.waiting{background:rgba(245,158,11,.12);color:#f59e0b;}
+    .status-badge.completed{background:rgba(108,76,241,.12);color:var(--primary);}
+    @keyframes statusPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.6);opacity:.4;}}
+    .stat-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    .stat-mini{background:var(--bg-card);border-radius:var(--radius-sm);padding:14px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border-color);}
+    .stat-mini .s-val{font-size:1.4rem;font-weight:800;color:var(--primary);}
+    .stat-mini .s-lbl{font-size:.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;margin-top:2px;}
+    .route-timeline{background:var(--bg-card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+    .rt-stop{display:flex;align-items:center;gap:12px;padding:8px 0;position:relative;}
+    .rt-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:3px solid var(--border-color);background:var(--bg-card);transition:var(--transition);}
+    .rt-dot.done{background:var(--success);border-color:var(--success);}
+    .rt-dot.active{background:var(--primary);border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-light);animation:statusPulse 1.2s infinite;}
+    .rt-line{position:absolute;left:6px;top:22px;width:2px;height:calc(100% + 8px);background:var(--border-color);z-index:0;}
+    .rt-line.done{background:var(--success);}
+    .rt-label{font-size:.88rem;font-weight:500;color:var(--text-muted);}
+    .rt-label.done{color:var(--success);font-weight:600;}
+    .rt-label.active{color:var(--primary);font-weight:700;font-size:.95rem;}
+    .jump-card{background:var(--bg-card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+    .jump-card label{display:block;font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+    .btn-jump{width:100%;height:52px;border:none;border-radius:var(--radius-sm);background:var(--primary-grad);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;transition:var(--transition);}
+    .btn-jump:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(108,76,241,.3);}
+    .quick-actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    .qa-btn{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--text-main);transition:var(--transition);text-align:center;}
+    .qa-btn:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow);}
+    .qa-btn i{font-size:1.4rem;color:var(--primary);}
+    .qa-btn.danger i,.qa-btn.danger{color:var(--danger);}
+    .qa-btn.danger:hover{border-color:var(--danger);}
+    .section-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border-color);}
     /* ── TRANSACTIONS DEDUCTION ANIMATION ── */
     .deducting-stage {
       position: relative;
@@ -635,6 +627,8 @@
       background: var(--primary);
       cursor: pointer;
       transition: var(--transition);
+      white-space: nowrap;
+      text-align: center;
     }
     .btn-action:hover {
       opacity: 0.9;
@@ -867,26 +861,47 @@
       <!-- ── PAGE: DASHBOARD ── -->
       
       <div class="dashboard-page" id="page-tracking">
-        <h2>Live Bus Tracking</h2>
-        <div class="tracking-controls" style="background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-          <label>Select Bus:</label>
-          <select id="liveBusSelect" class="input-field"></select>
-          
-          <div style="margin-top: 20px;">
-            <button id="startJourneyBtn" class="btn-action" onclick="toggleJourney()">
-              <i class="fas fa-play"></i> Start Journey
-            </button>
-            <span id="journeyStatus" style="margin-left: 15px; font-weight: bold;">Status: Not Started</span>
+        <div style="max-width:600px;margin:0 auto;padding:4px 0 80px;">
+
+          <!-- Bus Selection -->
+          <div class="section-label">Select Bus</div>
+          <div class="trk-select-wrap">
+            <i class="fas fa-bus"></i>
+            <select id="liveBusSelect" class="trk-select" onchange="updateBusInfoCard()"><option value="">-- Choose Bus --</option></select>
           </div>
 
-          <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-            <label>Jump to Stop:</label>
-            <select id="manualNextStop" class="input-field" style="width: 250px; display: inline-block;">
-              <option value="">Start journey first...</option>
-            </select>
-            <button class="btn-action" onclick="updateNextStop()" style="display: inline-block; width: auto; margin-left: 10px;">
-              Jump to Stop
+          <!-- Journey Button -->
+          <button id="startJourneyBtn" class="btn-journey" onclick="toggleJourney()">
+            <i class="fas fa-play" id="journeyIcon"></i>
+            <span id="journeyBtnText">Start Journey</span>
+          </button>
+
+          <!-- Status Badge -->
+          <div class="status-badge not-started" id="statusBadge">
+            <span id="journeyStatus">🔴 Not Started</span>
+          </div>
+
+          <!-- Jump to Stop -->
+          <div class="jump-card">
+            <div class="section-label">Jump to Stop</div>
+            <label>Select destination stop</label>
+            <div class="trk-select-wrap" style="margin-bottom:0;">
+              <i class="fas fa-map-marker-alt"></i>
+              <select id="manualNextStop" class="trk-select"><option value="">Start journey first…</option></select>
+            </div>
+            <button class="btn-jump" onclick="updateNextStop()">
+              <i class="fas fa-location-arrow"></i> Jump to Stop
             </button>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="section-label">Quick Actions</div>
+          <div class="quick-actions-grid">
+            <button class="qa-btn" onclick="switchTab('billing',document.getElementById('linkBilling'))"><i class="fas fa-ticket"></i>Issue Ticket</button>
+            <button class="qa-btn" onclick="switchTab('billing',document.getElementById('linkBilling'));setTimeout(()=>startCameraScanner('passenger'),300)"><i class="fas fa-qrcode"></i>Scan QR</button>
+            <button class="qa-btn" onclick="switchTab('history',document.getElementById('linkHistory'))"><i class="fas fa-users"></i>Passenger List</button>
+            <button class="qa-btn" onclick="switchTab('settlements',document.getElementById('linkSettlements'))"><i class="fas fa-coins"></i>Collections</button>
+            <button class="qa-btn danger" style="grid-column:span 2;" onclick="if(journeyActive)toggleJourney()"><i class="fas fa-stop-circle"></i>End Journey</button>
           </div>
         </div>
       </div>
@@ -1180,9 +1195,9 @@
               <h3>Settlements</h3>
               <p style="color: var(--text-muted); font-size: 0.85rem;">View history of settlements paid by admin.</p>
             </div>
-            <div style="display: flex; gap: 10px;">
-              <button class="btn-action" onclick="downloadConductorSettlements()"><i class="fas fa-download"></i> Download CSV</button>
-              <button class="btn-action" onclick="loadConductorSettlements()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn-action" style="width: auto; padding: 0 20px; white-space: nowrap;" onclick="downloadConductorSettlements()"><i class="fas fa-download"></i> Download CSV</button>
+              <button class="btn-action" style="width: auto; padding: 0 20px; white-space: nowrap;" onclick="loadConductorSettlements()"><i class="fas fa-sync-alt"></i> Refresh</button>
             </div>
           </div>
           <div class="table-container">
@@ -1478,42 +1493,122 @@
       }
     }
 
-    function downloadConductorSettlements() {
+    async function downloadConductorSettlements() {
       if (!currentSettlementsData || currentSettlementsData.length === 0) {
         alert("No data available to download.");
         return;
       }
-      let csvContent = "DATE,BUS,TOTAL SALES,COMMISSION,PAYABLE (PAID)\n";
-      currentSettlementsData.forEach(s => {
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Add BusFlux Logo
+      try {
+        const img = new Image();
+        img.src = '/icons/icon-192x192.png';
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        doc.addImage(img, 'PNG', 14, 10, 15, 15);
+      } catch(e) {
+        console.warn("Could not load logo for PDF", e);
+      }
+      
+      // Header Title
+      doc.setFontSize(22);
+      doc.setTextColor(33, 33, 102); // Navy Blue
+      doc.text("Conductor Settlements Report", 35, 22);
+      
+      const head = [["DATE", "BUS", "TOTAL SALES", "COMMISSION", "PAYABLE (PAID)"]];
+      let sumTotalSales = 0;
+      let sumCommission = 0;
+      let sumPayable = 0;
+      
+      const data = currentSettlementsData.map(s => {
         const dateStr = new Date(s.createdAt).toLocaleDateString();
-        const busName = s.busId ? `"${s.busId.busName} (${s.busId.busNumber})"` : "N/A";
-        csvContent += `${dateStr},${busName},₹${s.totalSales},-₹${s.commission},₹${s.payableAmount}\n`;
+        const busName = s.busId ? `${s.busId.busName} (${s.busId.busNumber})` : "N/A";
+        sumTotalSales += (Number(s.totalSales) || 0);
+        sumCommission += (Number(s.commission) || 0);
+        sumPayable += (Number(s.payableAmount) || 0);
+        return [dateStr, busName, `Rs ${s.totalSales}`, `-Rs ${s.commission}`, `Rs ${s.payableAmount}`];
       });
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", "settlements.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      
+      // Add Total Row
+      data.push([
+        { content: 'Total', colSpan: 2, styles: { halign: 'left', fontStyle: 'bold', textColor: 0 } }, 
+        { content: `Rs ${sumTotalSales}`, styles: { fontStyle: 'bold', textColor: 0 } }, 
+        { content: `-Rs ${sumCommission}`, styles: { fontStyle: 'bold', textColor: 0 } }, 
+        { content: `Rs ${sumPayable}`, styles: { fontStyle: 'bold', textColor: 0 } }
+      ]);
+      
+      doc.autoTable({
+        startY: 32,
+        head: head,
+        body: data,
+        theme: 'grid',
+        headStyles: { fillColor: [32, 128, 124], textColor: 255, fontStyle: 'bold', halign: 'center' }, // Teal Header
+        styles: { fontSize: 10, cellPadding: 5, textColor: [50, 50, 50], lineColor: [200, 200, 200], lineWidth: 0.1 },
+        columnStyles: {
+          0: { cellWidth: 25, halign: 'center' },
+          1: { cellWidth: 'auto' },
+          2: { halign: 'right', cellWidth: 35 },
+          3: { halign: 'right', cellWidth: 35 },
+          4: { halign: 'right', cellWidth: 40 }
+        }
+      });
+      
+      doc.save("settlements_report.pdf");
     }
 
-    function downloadSpecificConductorSettlement(index) {
+    async function downloadSpecificConductorSettlement(index) {
       if (!currentSettlementsData || !currentSettlementsData[index]) return;
       const s = currentSettlementsData[index];
-      let csvContent = "DATE,BUS,TOTAL SALES,COMMISSION,PAYABLE (PAID)\n";
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Add BusFlux Logo
+      try {
+        const img = new Image();
+        img.src = '/icons/icon-192x192.png';
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        doc.addImage(img, 'PNG', 14, 10, 15, 15);
+      } catch(e) {
+        console.warn("Could not load logo for PDF", e);
+      }
+      
+      // Header Title
+      doc.setFontSize(22);
+      doc.setTextColor(33, 33, 102); // Navy Blue
+      doc.text("Settlement Receipt", 35, 22);
+      
       const dateStr = new Date(s.createdAt).toLocaleDateString();
-      const busName = s.busId ? `"${s.busId.busName} (${s.busId.busNumber})"` : "N/A";
-      csvContent += `${dateStr},${busName},₹${s.totalSales},-₹${s.commission},₹${s.payableAmount}\n`;
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `settlement_${dateStr.replace(/\//g, '-')}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const busName = s.busId ? `${s.busId.busName} (${s.busId.busNumber})` : "N/A";
+      
+      const head = [["DATE", "BUS", "TOTAL SALES", "COMMISSION", "PAYABLE (PAID)"]];
+      const data = [[dateStr, busName, `Rs ${s.totalSales}`, `-Rs ${s.commission}`, `Rs ${s.payableAmount}`]];
+      
+      doc.autoTable({
+        startY: 32,
+        head: head,
+        body: data,
+        theme: 'grid',
+        headStyles: { fillColor: [32, 128, 124], textColor: 255, fontStyle: 'bold', halign: 'center' }, // Teal Header
+        styles: { fontSize: 10, cellPadding: 5, textColor: [50, 50, 50], lineColor: [200, 200, 200], lineWidth: 0.1 },
+        columnStyles: {
+          0: { cellWidth: 25, halign: 'center' },
+          1: { cellWidth: 'auto' },
+          2: { halign: 'right', cellWidth: 35 },
+          3: { halign: 'right', cellWidth: 35 },
+          4: { halign: 'right', cellWidth: 40 }
+        }
+      });
+      
+      doc.save(`settlement_${dateStr.replace(/\//g, '-')}.pdf`);
     }
 
     let allHistoryLogs = [];
@@ -1896,8 +1991,14 @@
 
       // Calculate pricing
       const basePrice = getAgeGroupPrice(bus, passenger.ageGroup || "");
-      const ratio = getStopRatio(bus, boardingPoint, droppingPoint);
-      const totalPrice = Math.round(basePrice * ratio);
+      const allStops = [bus.from, ...(bus.stops || []), bus.to];
+      const bIdx = allStops.findIndex(s => s.toLowerCase() === boardingPoint.toLowerCase());
+      const dIdx = allStops.findIndex(s => s.toLowerCase() === droppingPoint.toLowerCase());
+      let segments = 0;
+      if (bIdx !== -1 && dIdx !== -1 && dIdx > bIdx) {
+        segments = dIdx - bIdx;
+      }
+      const totalPrice = segments > 0 ? Math.min(segments * 5, 25) : 0;
 
       const photoUrl = passenger.userPhoto 
         ? `${window.getImageUrl(passenger.userPhoto)}` 
@@ -1944,16 +2045,31 @@
             <button class="btn-action" disabled style="background: var(--border-color); color: var(--text-muted); cursor: not-allowed;">
               Deduction Locked
             </button>
-          ` : passenger.balance >= totalPrice ? `
-            <button class="btn-action" onclick="confirmDeductPass('${passenger.email}', '${busId}', '${boardingPoint}', '${droppingPoint}', ${passenger.balance}, ${totalPrice}, '${passenger.name}')" style="background: linear-gradient(135deg, var(--success), #34d399); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-              <i class="fas fa-check-circle"></i> Confirm & Deduct ₹${totalPrice}
-            </button>
           ` : `
-            <div style="display: flex; align-items: center; gap: 8px; color: var(--danger); font-size: 0.85rem; font-weight: 700; background-color: var(--danger-light); padding: 10px 14px; border-radius: var(--radius); margin-bottom: 12px; justify-content: center;">
-              <i class="fas fa-exclamation-circle"></i> INSUFFICIENT PASSENGER BALANCE
+            <div style="margin-bottom: 15px; text-align: left;">
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">Select Payment Wallet:</div>
+              <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 8px; border: 1px solid var(--border-color);">
+                <input type="radio" name="walletType" value="busflux" checked onchange="document.getElementById('deductBtn').disabled = ${passenger.balance < totalPrice}; document.getElementById('insufficientMsg').style.display = ${passenger.balance < totalPrice} ? 'flex' : 'none';">
+                <div style="flex: 1;">
+                  <div style="font-weight: 600; font-size: 0.95rem; color: #333;">BusFlux Wallet</div>
+                  <div style="font-size: 0.8rem; color: ${passenger.balance >= totalPrice ? 'var(--success)' : 'var(--danger)'};">Balance: ₹${passenger.balance || 0}</div>
+                </div>
+              </label>
+              ${passenger.monthlyPassExpiry && new Date(passenger.monthlyPassExpiry) > new Date() ? `
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 8px; border: 1px solid var(--border-color);">
+                <input type="radio" name="walletType" value="monthly" onchange="document.getElementById('deductBtn').disabled = ${(passenger.monthlyPassBalance || 0) < totalPrice}; document.getElementById('insufficientMsg').style.display = ${(passenger.monthlyPassBalance || 0) < totalPrice} ? 'flex' : 'none';">
+                <div style="flex: 1;">
+                  <div style="font-weight: 600; font-size: 0.95rem; color: #333;">Monthly Wallet</div>
+                  <div style="font-size: 0.8rem; color: ${(passenger.monthlyPassBalance || 0) >= totalPrice ? 'var(--success)' : 'var(--danger)'};">Balance: ₹${passenger.monthlyPassBalance || 0}</div>
+                </div>
+              </label>
+              ` : ''}
             </div>
-            <button class="btn-action" disabled style="background: var(--border-color); color: var(--text-muted); cursor: not-allowed;">
-              Deduction Locked
+            <div id="insufficientMsg" style="display: ${passenger.balance < totalPrice ? 'flex' : 'none'}; align-items: center; gap: 8px; color: var(--danger); font-size: 0.85rem; font-weight: 700; background-color: var(--danger-light); padding: 10px 14px; border-radius: var(--radius); margin-bottom: 12px; justify-content: center;">
+              <i class="fas fa-exclamation-circle"></i> INSUFFICIENT BALANCE IN SELECTED WALLET
+            </div>
+            <button id="deductBtn" class="btn-action" ${passenger.balance < totalPrice ? 'disabled' : ''} onclick="confirmDeductPass('${passenger.email}', '${busId}', '${boardingPoint}', '${droppingPoint}', ${passenger.balance || 0}, ${passenger.monthlyPassBalance || 0}, ${totalPrice}, '${passenger.name}')" style="background: linear-gradient(135deg, var(--success), #34d399); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+              <i class="fas fa-check-circle"></i> Confirm & Deduct ₹${totalPrice}
             </button>
           `}
         </div>
@@ -2100,8 +2216,14 @@
       window.requestAnimationFrame(step);
     }
 
-    async function confirmDeductPass(email, busId, boardingPoint, droppingPoint, currentBalance, fare, name) {
+    async function confirmDeductPass(email, busId, boardingPoint, droppingPoint, balance, monthlyBalance, fare, name) {
       const resArea = document.getElementById("billingResultArea");
+      
+      let walletType = 'busflux';
+      const radio = document.querySelector('input[name="walletType"]:checked');
+      if (radio) walletType = radio.value;
+      
+      const currentBalance = walletType === 'monthly' ? monthlyBalance : balance;
       const targetBalance = currentBalance - fare;
 
       // 1. Show the deducting animation stage
@@ -2151,7 +2273,7 @@
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ email, busId, boardingPoint, droppingPoint })
+        body: JSON.stringify({ email, busId, boardingPoint, droppingPoint, walletType })
       }).then(async res => {
         const ok = res.ok;
         const data = await res.json();

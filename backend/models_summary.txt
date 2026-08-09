@@ -1,0 +1,471 @@
+
+--- Booking.js ---
+{
+
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+
+  busId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Bus",
+    required: true
+  },
+
+  seatsBooked: {
+    type: Number,
+    required: true
+  },
+
+  totalPrice: {
+    type: Number,
+    required: true
+  },
+
+  boardingPoint: {
+    type: String,
+    default: ""
+  },
+
+  droppingPoint: {
+    type: String,
+    default: ""
+  },
+
+  paymentId: { type: String, default: "" },
+  orderId: { type: String, default: "" },
+  paymentMethod: { type: String, default: "wallet" },
+  paymentStatus: { type: String, default: "pending" },
+  status: { type: String, default: "booked" },
+  scannedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  scannedAt: { type: Date }
+
+}, { timestamps: true }
+
+--- Bus.js ---
+{
+
+  // ── Basic Info ──
+  busName: { type: String, required: true },
+  busNumber: { type: String, required: true, unique: true },
+  busPhoto: { type: String, default: "" },
+
+  // ── Route ──
+  from: { type: String, required: true },
+  to: { type: String, required: true },
+  departureTime: { type: String, default: "" },
+  arrivalTime: { type: String, default: "" },
+  stops: [{ type: String }],          // intermediate stops
+
+  // ── Pricing ──
+  price: { type: Number, required: true },
+  childPrice:      { type: Number, default: 0 },
+  youthPrice:      { type: Number, default: 0 },
+  youngAdultPrice: { type: Number, default: 0 },
+  middleAgePrice:  { type: Number, default: 0 },
+  elderlyPrice:    { type: Number, default: 0 },
+  seniorPrice:     { type: Number, default: 0 },
+
+  // ── Seats ──
+  totalSeats:     { type: Number, default: 40 },
+  availableSeats: { type: Number, default: 40 },
+
+  // ── Driver ──
+  driverName:       { type: String, default: "" },
+  driverPhone:      { type: String, default: "" },
+  driverPhoto:      { type: String, default: "" },
+  driverAddress:    { type: String, default: "" },
+  driverExperience: { type: String, default: "" },
+
+  // ── Conductor ──
+  conductorName:       { type: String, default: "" },
+  conductorPhone:      { type: String, default: "" },
+  conductorPhoto:      { type: String, default: "" },
+  conductorAddress:    { type: String, default: "" },
+  conductorExperience: { type: String, default: "" },
+
+  // ── Status ──
+  isActive: { type: Boolean, default: true },
+  isExpress: { type: Boolean, default: false },
+  busType: { type: String, default: "Ordinary" },
+
+  // ── Tracking ──
+  currentLat: { type: Number, default: null },
+  currentLng: { type: Number, default: null },
+  nextStop: { type: String, default: "" }
+
+}, { timestamps: true }
+
+--- Notification.js ---
+{
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  type: { type: String, enum: ['info', 'success', 'warning', 'error'], default: 'info' },
+  read: { type: Boolean, default: false },
+  targetRole: { type: String, default: 'admin' },
+  targetUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  createdAt: { type: Date, default: Date.now }
+}
+
+--- OwnerTransaction.js ---
+{
+  bookingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Booking',
+    required: true
+  },
+  busId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Bus',
+    required: true
+  },
+  ticketAmount: {
+    type: Number,
+    required: true
+  },
+  commissionAmount: {
+    type: Number,
+    required: true
+  },
+  ownerAmount: {
+    type: Number,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['Pending Settlement', 'Settled'],
+    default: 'Pending Settlement'
+  },
+  bookingDate: {
+    type: Date,
+    default: Date.now
+  }
+}, { timestamps: true }
+
+--- Review.js ---
+{
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, required: true },
+}, { timestamps: true }
+
+--- Setting.js ---
+{
+  key: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  value: {
+    type: String,
+    required: true,
+  }
+}, { timestamps: true }
+
+--- Settlement.js ---
+{
+  busId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Bus',
+    required: true
+  },
+  month: {
+    type: String,
+    required: true
+  },
+  totalSales: {
+    type: Number,
+    required: true
+  },
+  commission: {
+    type: Number,
+    required: true
+  },
+  payableAmount: {
+    type: Number,
+    required: true
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['Pending', 'Paid'],
+    default: 'Paid'
+  }
+}, { timestamps: true }
+
+--- SupportTicket.js ---
+{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    name:    { type: String, default: "Guest" },
+    email:   { type: String, default: "" },
+    subject: { type: String, required: true },
+    details: { type: String, required: true },
+    status:  { type: String, enum: ["open", "in-progress", "resolved", "closed"], default: "open" },
+    adminReply: { type: String, default: "" },
+  },
+  { timestamps: true }
+
+--- Transaction.js ---
+{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+    amount: {
+      type: Number,
+      required: true
+    },
+    bonus: {
+      type: Number,
+      default: 0
+    },
+    totalCredit: {
+      type: Number,
+      required: true
+    },
+    method: {
+      type: String,
+      required: true
+    },
+    status: {
+      type: String,
+      default: "Completed"
+    }
+  },
+  {
+    timestamps: true
+  }
+
+--- User.js ---
+{
+
+      // NAME
+      name: {
+
+        type: String,
+
+        default: ""
+
+      },
+
+
+
+      // EMAIL
+      email: {
+
+        type: String,
+
+        required: true,
+
+        unique: true,
+
+        default: ""
+
+      },
+
+
+
+      // PASSWORD
+      password: {
+
+        type: String,
+
+        default: ""
+
+      },
+
+
+
+      // PHONE NUMBER
+      phone: {
+
+        type: String,
+
+        default: ""
+
+      },
+
+
+
+      // GENDER
+      gender: {
+        type: String,
+        default: ""
+      },
+
+      // AGE
+      age: {
+
+        type: Number,
+
+        default: 0
+
+      },
+
+
+
+      // AGE GROUP
+      ageGroup: {
+
+        type: String,
+
+        default: ""
+
+      },
+
+
+
+      // AADHAAR NUMBER
+      aadhaarNumber: {
+
+        type: String,
+
+        default: ""
+
+      },
+
+
+
+      // COLLEGE ID
+      collegeId: {
+        type: String,
+        default: ""
+      },
+
+      // STARTING YEAR
+      startingYear: {
+        type: Number,
+        default: null
+      },
+      
+      // ENDING YEAR
+      endingYear: {
+        type: Number,
+        default: null
+      },
+
+      // INSTITUTION TYPE
+      institutionType: {
+        type: String,
+        default: ""
+      },
+      
+      // CERTIFICATE PHOTO
+      certificatePhoto: {
+        type: String,
+        default: ""
+      },
+
+      // PROFILE PHOTO
+      userPhoto: {
+
+        type: String,
+
+        default: ""
+
+      },
+
+
+
+      // ID CARD PHOTO
+      idCardPhoto: {
+
+        type: String,
+
+        default: ""
+
+      },
+
+
+
+      // EMAIL OTP
+      otp: {
+
+        type: String,
+
+        default: ""
+
+      },
+
+
+
+      // EMAIL VERIFIED
+      isVerified: {
+
+        type: Boolean,
+
+        default: false
+
+      },
+
+
+
+      // RESET PASSWORD OTP
+      resetOtp: {
+
+        type: String,
+
+        default: ""
+
+      },
+
+
+
+      // USER ROLE
+      role: {
+
+        type: String,
+
+        default: "user"
+
+      },
+
+
+
+      // WALLET BALANCE
+      balance: {
+        type: Number,
+        default: 0
+      },
+
+      // MONTHLY PASS
+      monthlyPassBalance: {
+        type: Number,
+        default: 0
+      },
+      monthlyPassExpiry: {
+        type: Date,
+        default: null
+      },
+
+      // CONDUCTOR EXPERIENCE (IN YEARS)
+      experience: {
+        type: Number,
+        default: 0
+      },
+
+      // LAST UPI ID USED
+      lastUpiIdUsed: {
+        type: String,
+        default: ""
+      },
+
+      // BANK DETAILS
+      bankName: { type: String, default: "" },
+      accountNumber: { type: String, default: "" },
+      ifscCode: { type: String, default: "" },
+      upiId: { type: String, default: "" },
+
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    },
+
+    {
+
+      timestamps: true
+
+    }

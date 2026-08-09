@@ -205,11 +205,11 @@ router.get("/search-passenger", auth, async (req, res) => {
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(queryStr);
     if (isObjectId) {
       // A. Check if it's a User ID
-      passenger = await User.findOne({ _id: queryStr }).select("name email phone userPhoto balance ageGroup age");
+      passenger = await User.findOne({ _id: queryStr }).select("name email phone userPhoto balance ageGroup age monthlyPassBalance monthlyPassExpiry");
       
       // B. Check if it's a Booking ID
       if (!passenger) {
-        const booking = await Booking.findById(queryStr).populate("userId", "name email phone userPhoto balance ageGroup age");
+        const booking = await Booking.findById(queryStr).populate("userId", "name email phone userPhoto balance ageGroup age monthlyPassBalance monthlyPassExpiry");
         if (booking && booking.userId) {
           passenger = booking.userId;
         }
@@ -219,7 +219,7 @@ router.get("/search-passenger", auth, async (req, res) => {
     // 5. Try resolving as an 8-character Ticket ID suffix (case-insensitive search in bookings)
     const isTicketSuffix = /^[0-9a-zA-Z]{8}$/.test(queryStr);
     if (!passenger && isTicketSuffix) {
-      const bookings = await Booking.find().populate("userId", "name email phone userPhoto balance ageGroup age");
+      const bookings = await Booking.find().populate("userId", "name email phone userPhoto balance ageGroup age monthlyPassBalance monthlyPassExpiry");
       const booking = bookings.find(b => b._id.toString().toUpperCase().endsWith(queryStr.toUpperCase()));
       if (booking && booking.userId) {
         passenger = booking.userId;
@@ -229,7 +229,7 @@ router.get("/search-passenger", auth, async (req, res) => {
     // 6. Fallback: Search by clean lowercase email address
     if (!passenger) {
       const cleanEmail = queryStr.toLowerCase();
-      passenger = await User.findOne({ email: cleanEmail }).select("name email phone userPhoto balance ageGroup age");
+      passenger = await User.findOne({ email: cleanEmail }).select("name email phone userPhoto balance ageGroup age monthlyPassBalance monthlyPassExpiry");
     }
 
     if (!passenger) {
@@ -249,7 +249,7 @@ router.post("/deduct-pass", auth, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { email, busId, boardingPoint, droppingPoint } = req.body;
+    const { email, busId, boardingPoint, droppingPoint, walletType } = req.body;
     if (!email || !busId || !boardingPoint || !droppingPoint) {
       return res.status(400).json({ message: "All fields (email, busId, boardingPoint, droppingPoint) are required" });
     }
@@ -268,22 +268,38 @@ router.post("/deduct-pass", auth, async (req, res) => {
     }
 
     // 3. Calculate price
-    const ageGroup = passenger.ageGroup || "";
-    const basePrice = getAgeGroupPrice(bus, ageGroup);
-    const ratio = getStopRatio(bus, boardingPoint, droppingPoint);
-    const totalPrice = Math.round(basePrice * ratio);
+    const allStops = [bus.from, ...(bus.stops || []), bus.to];
+    const bIdx = allStops.findIndex(s => s.toLowerCase() === boardingPoint.toLowerCase());
+    const dIdx = allStops.findIndex(s => s.toLowerCase() === droppingPoint.toLowerCase());
+    
+    let segments = 0;
+    if (bIdx !== -1 && dIdx !== -1 && dIdx > bIdx) {
+      segments = dIdx - bIdx;
+    }
+    const totalPrice = segments > 0 ? Math.min(segments * 5, 25) : 0;
 
     if (totalPrice <= 0) {
       return res.status(400).json({ message: "Deduction failed: Fare cannot be ₹0. Please select a valid route/stops." });
     }
 
-    // 4. Check balance
+    // 4. Check balance based on walletType
     let passUsed = false;
-    if (passenger.monthlyPassExpiry && passenger.monthlyPassExpiry > new Date() && (passenger.monthlyPassBalance || 0) >= totalPrice) {
-      passUsed = true;
-    } else if ((passenger.balance || 0) >= totalPrice) {
-      passUsed = false;
+    let hasBalance = false;
+
+    if (walletType === "monthly") {
+      if (passenger.monthlyPassExpiry && passenger.monthlyPassExpiry > new Date() && (passenger.monthlyPassBalance || 0) >= totalPrice) {
+        passUsed = true;
+        hasBalance = true;
+      }
     } else {
+      // Default to BusFlux wallet
+      if ((passenger.balance || 0) >= totalPrice) {
+        passUsed = false;
+        hasBalance = true;
+      }
+    }
+
+    if (!hasBalance) {
       // Transaction failed - but we STILL store it in the database as a failed booking/transaction
       const failedBooking = await Booking.create({
         userId: passenger._id,

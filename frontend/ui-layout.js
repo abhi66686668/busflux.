@@ -221,14 +221,14 @@ window.showOffersToast = function() {
         </div>
         
         <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- Offer 1 -->
-          <div style="background:${isDark ? 'rgba(245, 158, 11, 0.1)' : '#fffbeb'}; border:1px dashed #f59e0b; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px;">
-            <div style="background:#f59e0b; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
-              <i class="fas fa-wallet"></i>
+          <!-- Offer 2 (Now the only offer) -->
+          <div onclick="window.location.href='wallet.html'" style="cursor:pointer; background:${isDark ? 'rgba(16, 185, 129, 0.1)' : '#ecfdf5'}; border:1px dashed #10b981; border-radius:12px; padding:16px; display:flex; align-items:center; gap:15px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+            <div style="background:#10b981; color:#fff; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;">
+              <i class="fas fa-gift"></i>
             </div>
             <div style="flex:1;">
-              <h4 style="color:${isDark ? '#fbbf24' : '#b45309'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">Cashback Fiesta</h4>
-              <p style="color:${isDark ? '#fcd34d' : '#b45309'}; margin:0; font-size:0.85rem; line-height:1.4;">First recharge will get ₹100 cash back!</p>
+              <h4 style="color:${isDark ? '#34d399' : '#059669'}; margin:0 0 4px 0; font-weight:700; font-size:1.05rem;">Special Offer</h4>
+              <p style="color:${isDark ? '#6ee7b7' : '#059669'}; margin:0; font-size:0.85rem; line-height:1.4;">Get 10% Extra Bonus on all Wallet Recharges!</p>
             </div>
           </div>
         </div>

@@ -968,6 +968,50 @@
                 <div class="field-error" id="emailError"></div>
               </div>
 
+              <!-- Email Verification Block -->
+              <div class="form-group full otp-box visible" id="otpBoxContainer">
+                <div class="section-header" style="margin-bottom: 12px;">
+                  <div class="section-icon" style="width: 32px; height: 32px; font-size: 0.85rem;"><i class="fas fa-envelope-open-text"></i></div>
+                  <div>
+                    <h2 style="font-size: 0.9rem;">Verify your email</h2>
+                    <p style="font-size: 0.75rem;">We'll send a 6-digit OTP to your email address</p>
+                  </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 0.82rem; color: var(--text-medium); font-weight: 500;">Enter the 6-digit code sent to your email</span>
+                  <span id="emailVerifyStatusBadge" style="font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 600;"><i class="fas fa-info-circle"></i> Email not verified</span>
+                </div>
+
+                <div class="email-row">
+                  <div class="form-group" style="display: flex; gap: 8px; justify-content: flex-start;">
+                    <input type="text" maxlength="1" class="otp-input" style="width: 42px; height: 46px; text-align: center; font-size: 1.2rem; font-weight: 700; border: 1.5px solid var(--border); border-radius: 8px; background: white;" oninput="handleOtpInput(this, 1)">
+                    <input type="text" maxlength="1" class="otp-input" style="width: 42px; height: 46px; text-align: center; font-size: 1.2rem; font-weight: 700; border: 1.5px solid var(--border); border-radius: 8px; background: white;" oninput="handleOtpInput(this, 2)">
+                    <input type="text" maxlength="1" class="otp-input" style="width: 42px; height: 46px; text-align: center; font-size: 1.2rem; font-weight: 700; border: 1.5px solid var(--border); border-radius: 8px; background: white;" oninput="handleOtpInput(this, 3)">
+                    <input type="text" maxlength="1" class="otp-input" style="width: 42px; height: 46px; text-align: center; font-size: 1.2rem; font-weight: 700; border: 1.5px solid var(--border); border-radius: 8px; background: white;" oninput="handleOtpInput(this, 4)">
+                    <input type="text" maxlength="1" class="otp-input" style="width: 42px; height: 46px; text-align: center; font-size: 1.2rem; font-weight: 700; border: 1.5px solid var(--border); border-radius: 8px; background: white;" oninput="handleOtpInput(this, 5)">
+                    <input type="text" maxlength="1" class="otp-input" style="width: 42px; height: 46px; text-align: center; font-size: 1.2rem; font-weight: 700; border: 1.5px solid var(--border); border-radius: 8px; background: white;" oninput="handleOtpInput(this, 6)">
+                  </div>
+                  
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button type="button" class="otp-btn otp-send-btn" id="sendOtpBtn" onclick="sendOTP()">
+                      <i class="fas fa-paper-plane"></i> Send OTP
+                    </button>
+                    <button type="button" class="otp-btn otp-verify-btn" id="verifyOtpBtn" onclick="verifyOTP()" disabled style="opacity: 0.5; cursor: not-allowed; background: rgba(108,63,214,0.05); color: var(--text-muted); border-color: var(--border);">
+                      <i class="fas fa-shield-check"></i> Verify OTP
+                    </button>
+                  </div>
+                </div>
+
+                <div id="otpTimerContainer" style="display: none; text-align: right; margin-top: 8px; font-size: 0.75rem; color: var(--text-medium); font-weight: 500;">
+                  <i class="far fa-clock"></i> Resend OTP in <span id="otpTimer" style="color: var(--primary); font-weight: 700;">00:45</span>
+                </div>
+                
+                <div id="otpResendHelp" style="display: none; margin-top: 12px; font-size: 0.75rem; color: var(--primary); background: rgba(108, 63, 214, 0.08); padding: 8px 12px; border-radius: 6px; text-align: center;">
+                  Didn't receive the OTP? Check your spam folder or resend OTP.
+                </div>
+              </div>
+
               <!-- Phone -->
               <div class="form-group full">
                 <label class="form-label" for="phone">Phone Number</label>
@@ -1308,6 +1352,184 @@
       }
     }
 
+    // ── OTP Verification ──
+    window.isEmailVerified = false;
+    let otpTimerInterval = null;
+
+    function handleOtpInput(input, index) {
+      input.value = input.value.replace(/[^0-9]/g, '');
+      
+      if (input.value.length === 1 && index < 6) {
+        const next = document.querySelectorAll('.otp-input')[index];
+        if (next) next.focus();
+      }
+      
+      const inputs = document.querySelectorAll('.otp-input');
+      let allFilled = true;
+      inputs.forEach(inp => { if(!inp.value) allFilled = false; });
+      
+      const verifyBtn = document.getElementById('verifyOtpBtn');
+      if (allFilled && !window.isEmailVerified) {
+        verifyBtn.disabled = false;
+        verifyBtn.style.opacity = '1';
+        verifyBtn.style.cursor = 'pointer';
+        verifyBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+        verifyBtn.style.color = 'var(--success)';
+        verifyBtn.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      } else if (!window.isEmailVerified) {
+        verifyBtn.disabled = true;
+        verifyBtn.style.opacity = '0.5';
+        verifyBtn.style.cursor = 'not-allowed';
+        verifyBtn.style.background = 'rgba(108,63,214,0.05)';
+        verifyBtn.style.color = 'var(--text-muted)';
+        verifyBtn.style.borderColor = 'var(--border)';
+      }
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.target.classList.contains('otp-input') && e.key === 'Backspace' && e.target.value === '') {
+        const inputs = Array.from(document.querySelectorAll('.otp-input'));
+        const idx = inputs.indexOf(e.target);
+        if (idx > 0) {
+          inputs[idx - 1].focus();
+        }
+      }
+    });
+
+    async function sendOTP() {
+      const email = document.getElementById('email').value.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        showToast('Please enter a valid email address first.', 'warning');
+        return;
+      }
+
+      const sendBtn = document.getElementById('sendOtpBtn');
+      const originalText = sendBtn.innerHTML;
+      sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch(((window.location.protocol === "file:" ? "http://localhost:5000/api" : "/api") + "/auth/send-otp"), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          showToast('OTP sent to your email!', 'success');
+          startOtpTimer();
+        } else {
+          showToast(data.message || 'Failed to send OTP', 'error');
+          sendBtn.innerHTML = originalText;
+          sendBtn.disabled = false;
+        }
+      } catch (err) {
+        console.error('OTP Send error:', err);
+        showToast('Error sending OTP. Please try again.', 'error');
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+      }
+    }
+
+    function startOtpTimer() {
+      const sendBtn = document.getElementById('sendOtpBtn');
+      const timerContainer = document.getElementById('otpTimerContainer');
+      const timerSpan = document.getElementById('otpTimer');
+      const helpText = document.getElementById('otpResendHelp');
+      
+      sendBtn.style.display = 'none';
+      timerContainer.style.display = 'block';
+      helpText.style.display = 'block';
+      
+      let secondsLeft = 45;
+      timerSpan.textContent = `00:${secondsLeft}`;
+      
+      if (otpTimerInterval) clearInterval(otpTimerInterval);
+      
+      otpTimerInterval = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+          clearInterval(otpTimerInterval);
+          timerContainer.style.display = 'none';
+          sendBtn.style.display = 'block';
+          sendBtn.innerHTML = '<i class="fas fa-redo"></i> Resend OTP';
+          sendBtn.disabled = false;
+        } else {
+          timerSpan.textContent = `00:${secondsLeft < 10 ? '0' : ''}${secondsLeft}`;
+        }
+      }, 1000);
+    }
+
+    async function verifyOTP() {
+      const email = document.getElementById('email').value.trim();
+      const inputs = document.querySelectorAll('.otp-input');
+      let otp = '';
+      inputs.forEach(inp => otp += inp.value);
+      
+      if (otp.length !== 6) {
+        showToast('Please enter the 6-digit OTP.', 'warning');
+        return;
+      }
+
+      const verifyBtn = document.getElementById('verifyOtpBtn');
+      const originalText = verifyBtn.innerHTML;
+      verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+      verifyBtn.disabled = true;
+
+      try {
+        const res = await fetch(((window.location.protocol === "file:" ? "http://localhost:5000/api" : "/api") + "/auth/verify-otp"), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          showToast('Email verified successfully!', 'success');
+          window.isEmailVerified = true;
+          
+          verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verified';
+          verifyBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+          verifyBtn.style.color = 'var(--success)';
+          verifyBtn.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+          
+          const sendBtn = document.getElementById('sendOtpBtn');
+          sendBtn.style.display = 'none';
+          document.getElementById('otpTimerContainer').style.display = 'none';
+          document.getElementById('otpResendHelp').style.display = 'none';
+          
+          const badge = document.getElementById('emailVerifyStatusBadge');
+          badge.innerHTML = '<i class="fas fa-check-circle"></i> Verified';
+          badge.style.background = 'rgba(16, 185, 129, 0.1)';
+          badge.style.color = 'var(--success)';
+          badge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+          
+          document.getElementById('email').readOnly = true;
+          document.getElementById('email').style.background = 'rgba(16, 185, 129, 0.04)';
+          document.getElementById('email').style.borderColor = 'rgba(16, 185, 129, 0.5)';
+          
+          inputs.forEach(inp => {
+            inp.readOnly = true;
+            inp.style.background = 'rgba(16, 185, 129, 0.04)';
+            inp.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+          });
+          
+          if (otpTimerInterval) clearInterval(otpTimerInterval);
+        } else {
+          showToast(data.message || 'Invalid OTP', 'error');
+          verifyBtn.innerHTML = originalText;
+          verifyBtn.disabled = false;
+        }
+      } catch (err) {
+        console.error('OTP Verify error:', err);
+        showToast('Error verifying OTP. Please try again.', 'error');
+        verifyBtn.innerHTML = originalText;
+        verifyBtn.disabled = false;
+      }
+    }
+
     // ── Step Navigation ──
     let currentStep = 1;
 
@@ -1340,6 +1562,10 @@
           }
           if (!agreeTerms) {
             showToast('Please agree to the Terms & Conditions.', 'warning'); return;
+          }
+
+          if (!window.isEmailVerified) {
+            showToast('Please verify your email with OTP before proceeding.', 'error'); return;
           }
 
           try {
