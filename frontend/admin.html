@@ -579,13 +579,7 @@
 
   <!-- ── DASHBOARD ── -->
   <div class="page active" id="page-dashboard">
-    <div class="search-bar-container">
-      <div class="search-input-wrapper">
-        <i class="fas fa-search"></i>
-        <input type="text" placeholder="Search name, email, phone or ID...">
-      </div>
-      <button class="filter-btn"><i class="fas fa-filter"></i></button>
-    </div>
+
 
     <div class="mobile-section-header">
       <div class="mobile-section-title">Overview</div>
@@ -808,7 +802,7 @@
     <div class="stat-grid">
       <div class="stat-card">
         <div class="stat-icon blue"><i class="fas fa-coins"></i></div>
-        <div><div class="stat-val" id="settleTotalRevenue">₹0</div><div class="stat-label">Total Ticket Sales</div></div>
+        <div><div class="stat-val" id="settleTotalRevenue">₹0</div><div class="stat-label">Total Amount</div></div>
       </div>
       <div class="stat-card">
         <div class="stat-icon orange"><i class="fas fa-percent"></i></div>
@@ -1768,14 +1762,6 @@ async function loadTransactions() {
     let transactions = await res.json();
     transactions = transactions.filter(t => t.userId && t.userId.name && t.userId.name.trim() !== "");
     
-    // DEMO OVERRIDE: mock data to exactly 3500
-    transactions = [
-      { createdAt: new Date(Date.now() - 3600000).toISOString(), userId: { name: "ravi", email: "abhishekpoojary225@gmail.com" }, method: "Razorpay", amount: 1500, bonus: 0, totalCredit: 1500, status: "completed" },
-      { createdAt: new Date(Date.now() - 86400000).toISOString(), userId: { name: "jayalakshmi", email: "jayalakshpoojary869@gmail.com" }, method: "Razorpay", amount: 1000, bonus: 100, totalCredit: 1100, status: "completed" },
-      { createdAt: new Date(Date.now() - 172800000).toISOString(), userId: { name: "Harsha", email: "harshaadithyakumar@gmail.com" }, method: "Razorpay (Pass)", amount: 599, bonus: 0, totalCredit: 599, status: "completed" },
-      { createdAt: new Date(Date.now() - 259200000).toISOString(), userId: { name: "ravi", email: "abhishekpoojary225@gmail.com" }, method: "Wallet", amount: 401, bonus: 0, totalCredit: 401, status: "completed" }
-    ];
-    
     window.allTransactionsData = transactions; // Make available for charts
 
     const tbody = document.getElementById("transactionsBody");
@@ -2565,32 +2551,6 @@ async function fetchProfitHistory() {
     const data = await res.json();
     if (data.success) {
       allProfitHistory = data.data;
-      
-      // DEMO OVERRIDE: Generate realistic 10-25 rupee tickets summing to exactly 567
-      const amounts = [
-        15, 25, 12, 18, 10, 21, 14, 23, 11, 19,
-        22, 16, 24, 17, 10, 25, 12, 20, 13, 24,
-        16, 22, 19, 11, 23, 14, 18, 20, 15, 21,
-        12, 25
-      ];
-      const buses = [
-        { name: "GOLDEN 54", route_code: "KA19ET9990" },
-        { name: "MERCY 51", route_code: "KA19MC0051" },
-        { name: "KARAVALI 51K", route_code: "KA19ET1234" }
-      ];
-      
-      allProfitHistory = amounts.map((amt, index) => {
-        // Use a simple pseudo-random hash of the index to pick the bus, so it's varied but stable
-        const randomBusIndex = (index * 7 + 13) % 3;
-        const bus = buses[randomBusIndex];
-        return {
-           _id: "mock_" + index,
-           ticketAmount: amt,
-           commissionAmount: parseFloat((amt * 0.10).toFixed(2)),
-           busId: bus,
-           updatedAt: new Date(Date.now() - index * 3600000).toISOString() // space them out by 1 hour
-        };
-      });
       
       const filterInput = document.getElementById('profitMonthFilter');
       // Do not force a default month filter so it shows all-time by default
